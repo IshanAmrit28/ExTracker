@@ -10,8 +10,9 @@ import YearlyCalendar from './components/YearlyCalendar';
 import Auth from './components/Auth';
 import './App.css';
 
-const API_URL = 'http://localhost:5000/api/transactions';
-const SETTINGS_URL = 'http://localhost:5000/api/settings';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/_/backend';
+const API_URL = `${API_BASE_URL}/api/transactions`;
+const SETTINGS_URL = `${API_BASE_URL}/api/settings`;
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
