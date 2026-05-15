@@ -46,3 +46,5 @@ mongoose.connect(MONGO_URI)
   .catch((err) => {
     console.error('Error connecting to MongoDB:', err.message);
   });
+
+module.exports = app;
