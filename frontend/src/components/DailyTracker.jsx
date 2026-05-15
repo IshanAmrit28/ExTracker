@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Info } from 'lucide-react';
 
 const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
+  const [showInfo, setShowInfo] = useState(false);
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
@@ -91,12 +92,14 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
           
           <div className="form-row">
             <div className="form-group flex-1">
-              <label>Category</label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                Category
+                <Info size={16} style={{ cursor: 'pointer', color: 'var(--primary-color)' }} onClick={() => setShowInfo(!showInfo)} title="Click for category guide" />
+              </label>
               <select name="category" value={formData.category} onChange={handleChange} required>
                 {settings.categories.map(c => (
                   <option key={c.name} value={c.name}>{c.name}</option>
                 ))}
-                <option value="Income">Income / Salary</option>
               </select>
             </div>
             <div className="form-group flex-1">
@@ -113,10 +116,23 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
                 <option value="Need">Need</option>
                 <option value="Want">Want</option>
                 <option value="Saving">Saving</option>
-                <option value="Income">Income</option>
               </select>
             </div>
           </div>
+
+          {showInfo && (
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+              <h4 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)', fontSize: '0.95rem' }}>Category & Payment Guide</h4>
+              <ul style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.5rem', listStyle: 'none', padding: 0 }}>
+                <li><strong>Life Infrastructure (Need):</strong> Rent, Groceries, Utilities, Basic Transport. <em style={{ color: 'var(--text-color)' }}>Best via: UPI, Credit Card</em></li>
+                <li><strong>Future Me (Saving):</strong> Investments, Emergency Fund, Savings. <em style={{ color: 'var(--text-color)' }}>Best via: Bank Transfer</em></li>
+                <li><strong>Performance & Growth (Need/Want):</strong> Gym, Courses, Books, Mentorship. <em style={{ color: 'var(--text-color)' }}>Best via: UPI, Debit Card</em></li>
+                <li><strong>Relationships & Generosity (Want):</strong> Gifts, Charity, Family support. <em style={{ color: 'var(--text-color)' }}>Best via: Cash, UPI</em></li>
+                <li><strong>Lifestyle Enjoyment (Want):</strong> Dining out, Movies, Vacations, Hobbies. <em style={{ color: 'var(--text-color)' }}>Best via: Credit Card</em></li>
+              </ul>
+            </div>
+          )}
+          
           <button type="submit" className="btn-primary">Add Transaction</button>
         </form>
       </div>

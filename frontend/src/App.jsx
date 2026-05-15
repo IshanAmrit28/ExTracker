@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Setup from './components/Setup';
 import DailyTracker from './components/DailyTracker';
+import IncomeTracker from './components/IncomeTracker';
 import MonthlyAnalysis from './components/MonthlyAnalysis';
 import WeeklyAnalysis from './components/WeeklyAnalysis';
 import YearlyCalendar from './components/YearlyCalendar';
@@ -76,6 +77,8 @@ function App() {
         return <Dashboard transactions={transactions} settings={settings} />;
       case 'dailyTracker':
         return <DailyTracker transactions={transactions} settings={settings} fetchTransactions={fetchTransactions} />;
+      case 'incomeTracker':
+        return <IncomeTracker transactions={transactions} settings={settings} fetchTransactions={fetchTransactions} />;
       case 'monthlyAnalysis':
         return <MonthlyAnalysis transactions={transactions} settings={settings} />;
       case 'weeklyAnalysis':

@@ -1,4 +1,4 @@
-import { Activity, Target } from 'lucide-react';
+import { Activity, Target, Wallet, TrendingDown, Landmark, PieChart } from 'lucide-react';
 
 const Dashboard = ({ transactions, settings }) => {
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -8,7 +8,16 @@ const Dashboard = ({ transactions, settings }) => {
   const actualWant = thisMonthTx.filter(t => t.type === 'Want').reduce((acc, curr) => acc + curr.amount, 0);
   const actualSaving = thisMonthTx.filter(t => t.type === 'Saving').reduce((acc, curr) => acc + curr.amount, 0);
 
-  const salary = settings.salary || 0;
+  const totalCreditedThisMonth = thisMonthTx.filter(t => t.type === 'Income').reduce((acc, curr) => acc + curr.amount, 0);
+  const totalSpentThisMonth = actualNeed + actualWant;
+  const totalLeftThisMonth = totalCreditedThisMonth - totalSpentThisMonth;
+  const percentLeftThisMonth = totalCreditedThisMonth > 0 ? Math.round((totalLeftThisMonth / totalCreditedThisMonth) * 100) : 0;
+
+  const totalAllTimeCredited = transactions.filter(t => t.type === 'Income').reduce((acc, curr) => acc + curr.amount, 0);
+  const totalAllTimeSpent = transactions.filter(t => ['Need', 'Want', 'expense'].includes(t.type)).reduce((acc, curr) => acc + curr.amount, 0);
+  const overallLeft = totalAllTimeCredited - totalAllTimeSpent;
+
+  const salary = totalCreditedThisMonth > 0 ? totalCreditedThisMonth : (settings.salary || 0);
   
   const needP = (settings.needsPercentage || 50) / 100;
   const wantP = (settings.wantsPercentage || 30) / 100;
@@ -39,6 +48,29 @@ const Dashboard = ({ transactions, settings }) => {
         <h2>Calc Summary</h2>
         <p>Your overarching Budget vs Actual overview</p>
       </header>
+
+      <div className="account-overview" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '1.5rem' }}>
+          <Wallet color="#10b981" size={28} style={{ marginBottom: '0.75rem' }} />
+          <h3 style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Credited This Month</h3>
+          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>₹{totalCreditedThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '1.5rem' }}>
+          <TrendingDown color="#ef4444" size={28} style={{ marginBottom: '0.75rem' }} />
+          <h3 style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Spent This Month</h3>
+          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>₹{totalSpentThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '1.5rem' }}>
+          <PieChart color="#3b82f6" size={28} style={{ marginBottom: '0.75rem' }} />
+          <h3 style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Left This Month</h3>
+          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>₹{totalLeftThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 'normal'}}>({percentLeftThisMonth}%)</span></p>
+        </div>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '1.5rem' }}>
+          <Landmark color="#8b5cf6" size={28} style={{ marginBottom: '0.75rem' }} />
+          <h3 style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Total Overall Balance</h3>
+          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#8b5cf6' }}>₹{overallLeft.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        </div>
+      </div>
 
       <div className="top-metrics">
         <div className="score-card">
