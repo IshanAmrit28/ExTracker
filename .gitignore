@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build/Production outputs
+dist/
+build/
+.next/
+out/
+
+# IDEs and OS specific files
+.DS_Store
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Agent data
+.gemini/
+
+# Project specific (avoiding uploading personal financial templates or dumps)
+*.xlsx
+*.csv
+backend/excel_dump.json
+
+# Additional specific logs and caches
+*.log
+coverage/
+.eslintcache
+Thumbs.db

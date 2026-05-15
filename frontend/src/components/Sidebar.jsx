@@ -1,0 +1,44 @@
+import { LayoutDashboard, Receipt, BarChart3, PieChart, CalendarDays, Settings, LogOut } from 'lucide-react';
+
+const Sidebar = ({ activeTab, setActiveTab, handleLogout }) => {
+  return (
+    <aside className="sidebar">
+      <h1>FinanceTracker</h1>
+      <nav className="nav-menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <button className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+          <LayoutDashboard size={20} />
+          <span>Dashboard</span>
+        </button>
+        <button className={`nav-item ${activeTab === 'dailyTracker' ? 'active' : ''}`} onClick={() => setActiveTab('dailyTracker')}>
+          <Receipt size={20} />
+          <span>Daily Tracker</span>
+        </button>
+        <button className={`nav-item ${activeTab === 'weeklyAnalysis' ? 'active' : ''}`} onClick={() => setActiveTab('weeklyAnalysis')}>
+          <BarChart3 size={20} />
+          <span>Weekly Analysis</span>
+        </button>
+        <button className={`nav-item ${activeTab === 'monthlyAnalysis' ? 'active' : ''}`} onClick={() => setActiveTab('monthlyAnalysis')}>
+          <PieChart size={20} />
+          <span>Monthly Analysis</span>
+        </button>
+        <button className={`nav-item ${activeTab === 'yearlyCalendar' ? 'active' : ''}`} onClick={() => setActiveTab('yearlyCalendar')}>
+          <CalendarDays size={20} />
+          <span>Yearly Calendar</span>
+        </button>
+        <button className={`nav-item ${activeTab === 'setup' ? 'active' : ''}`} onClick={() => setActiveTab('setup')}>
+          <Settings size={20} />
+          <span>Setup</span>
+        </button>
+
+        <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+          <button className="nav-item" onClick={handleLogout} style={{ color: 'var(--danger)' }}>
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </nav>
+    </aside>
+  );
+};
+
+export default Sidebar;
