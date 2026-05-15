@@ -12,13 +12,20 @@ const authRoutes = require('./routes/auth');
 const app = express();
 
 // Middleware
-const allowedOrigins = process.env.FRONTEND_URI ? process.env.FRONTEND_URI.split(',') : ['http://localhost:5173'];
+const allowedOrigins = process.env.FRONTEND_URI 
+  ? process.env.FRONTEND_URI.split(',').map(uri => uri.trim().replace(/\/$/, '')) 
+  : ['http://localhost:5173'];
+
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+    
+    const cleanOrigin = origin.trim().replace(/\/$/, '');
+    if (allowedOrigins.indexOf(cleanOrigin) !== -1 || allowedOrigins.includes('*')) {
       return callback(null, true);
     }
+    
+    console.warn(`CORS blocked request from origin: ${origin}`);
     return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
   },
   credentials: true
