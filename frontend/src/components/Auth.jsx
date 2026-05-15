@@ -12,7 +12,7 @@ const Auth = ({ setToken }) => {
     setError('');
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
     try {
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/_/backend';
+      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
       const res = await axios.post(`${API_BASE_URL}${endpoint}`, { email, password });
       setToken(res.data.token);
     } catch (err) {

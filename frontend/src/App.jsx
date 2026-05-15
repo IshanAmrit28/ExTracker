@@ -8,9 +8,10 @@ import MonthlyAnalysis from './components/MonthlyAnalysis';
 import WeeklyAnalysis from './components/WeeklyAnalysis';
 import YearlyCalendar from './components/YearlyCalendar';
 import Auth from './components/Auth';
+import { Analytics } from "@vercel/analytics/react";
 import './App.css';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/_/backend';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 const API_URL = `${API_BASE_URL}/api/transactions`;
 const SETTINGS_URL = `${API_BASE_URL}/api/settings`;
 
@@ -59,7 +60,12 @@ function App() {
   };
 
   if (!token) {
-    return <Auth setToken={setToken} />;
+    return (
+      <>
+        <Auth setToken={setToken} />
+        <Analytics />
+      </>
+    );
   }
 
   if (!settings) return <div className="loading" style={{color: 'white', textAlign: 'center', marginTop: '5rem'}}>Loading Finance Tracker...</div>;
@@ -89,6 +95,7 @@ function App() {
       <div className="main-content">
         {renderContent()}
       </div>
+      <Analytics />
     </div>
   );
 }
