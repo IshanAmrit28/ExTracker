@@ -12,24 +12,18 @@ const authRoutes = require('./routes/auth');
 const app = express();
 
 // Middleware
-const allowedOrigins = process.env.FRONTEND_URI 
-  ? process.env.FRONTEND_URI.split(',').map(uri => uri.trim().replace(/\/$/, '')) 
-  : ['http://localhost:5173'];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    const cleanOrigin = origin.trim().replace(/\/$/, '');
-    if (allowedOrigins.indexOf(cleanOrigin) !== -1 || allowedOrigins.includes('*')) {
-      return callback(null, true);
-    }
-    
-    console.warn(`CORS blocked request from origin: ${origin}`);
-    return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://extracker-jade.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Routes
