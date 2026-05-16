@@ -1,13 +1,13 @@
 :root {
-  --primary-color: #4f46e5;
-  --primary-hover: #4338ca;
-  --bg-color: #0f172a;
-  --card-bg: #1e293b;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --success: #10b981;
+  --primary-color: #f97316;
+  --primary-hover: #ea580c;
+  --bg-color: #000000;
+  --card-bg: #111111;
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+  --success: #22c55e;
   --danger: #ef4444;
-  --border: #334155;
+  --border: #27272a;
 }
 
 body {
