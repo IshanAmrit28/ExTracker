@@ -45,11 +45,17 @@ const YearlyCalendar = ({ transactions }) => {
         <p>Visual overview of your spending intensity across {currentYear}</p>
       </header>
 
-      <div className="card" style={{ overflowX: 'auto' }}>
+      <div className="card">
         <div className="heatmap-container">
           {months.map((month, monthIndex) => {
             const daysInMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
+            const firstDayOfWeek = new Date(currentYear, monthIndex, 1).getDay();
             const days = [];
+            
+            for (let i = 0; i < firstDayOfWeek; i++) {
+              days.push({ empty: true, key: `empty-${monthIndex}-${i}` });
+            }
+
             for (let i = 1; i <= daysInMonth; i++) {
               const dateStr = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
               days.push({
@@ -61,9 +67,14 @@ const YearlyCalendar = ({ transactions }) => {
 
             return (
               <div key={month} className="heatmap-month">
-                <h4>{month}</h4>
+                <h4 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)', fontSize: '1rem', textAlign: 'center' }}>{month}</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '6px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                  <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                </div>
                 <div className="heatmap-grid">
-                  {days.map(d => (
+                  {days.map(d => d.empty ? (
+                    <div key={d.key} className="heatmap-cell empty"></div>
+                  ) : (
                     <div 
                       key={d.date} 
                       className={`heatmap-cell ${getIntensityClass(d.amount)}`}

@@ -231,12 +231,14 @@ body {
 .progress-bar.success { background: var(--success) !important; }
 
 /* Heatmap */
-.heatmap-container { display: flex; gap: 1rem; padding-bottom: 1rem; }
+.heatmap-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2.5rem; padding-bottom: 1rem; }
 .heatmap-month { display: flex; flex-direction: column; gap: 0.5rem; }
 .heatmap-month h4 { font-size: 0.8rem; color: var(--text-muted); font-weight: 400; text-align: center; }
 .heatmap-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.heatmap-cell { width: 14px; height: 14px; border-radius: 3px; background-color: #334155; }
-.heatmap-cell.level-0 { background-color: #334155; }
+.heatmap-cell { width: 100%; aspect-ratio: 1; border-radius: 4px; background-color: var(--border); transition: transform 0.2s; cursor: pointer; }
+.heatmap-cell:hover:not(.empty) { transform: scale(1.2); z-index: 10; position: relative; }
+.heatmap-cell.empty { background-color: transparent; cursor: default; }
+.heatmap-cell.level-0 { background-color: var(--border); }
 .heatmap-cell.level-1 { background-color: #0e4429; }
 .heatmap-cell.level-2 { background-color: #006d32; }
 .heatmap-cell.level-3 { background-color: #26a641; }
