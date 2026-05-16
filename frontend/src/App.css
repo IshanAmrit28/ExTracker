@@ -243,7 +243,8 @@ body {
 .heatmap-cell.level-2 { background-color: #006d32; }
 .heatmap-cell.level-3 { background-color: #26a641; }
 .heatmap-cell.level-4 { background-color: #39d353; }
-.heatmap-legend { display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); }
+.heatmap-legend { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); }
+.heatmap-legend .heatmap-cell { width: 14px; height: 14px; }
 
 .delete-btn { background: rgba(239, 68, 68, 0.1); border: none; color: var(--danger); cursor: pointer; border-radius: 6px; display: flex; transition: 0.2s; }
 .delete-btn:hover { background: var(--danger); color: white; }

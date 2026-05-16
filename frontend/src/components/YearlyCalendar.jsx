@@ -79,7 +79,10 @@ const YearlyCalendar = ({ transactions }) => {
                       key={d.date} 
                       className={`heatmap-cell ${getIntensityClass(d.amount)}`}
                       title={`${d.date}: ₹${d.amount.toFixed(2)}`}
-                    ></div>
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: d.amount > 0 ? 'rgba(255,255,255,0.9)' : 'var(--text-muted)' }}
+                    >
+                      {d.dayNum}
+                    </div>
                   ))}
                 </div>
               </div>
