@@ -28,12 +28,6 @@ exports.sendReportEmail = async (user, emailData, pdfBuffer, reportType = 'Weekl
           <p style="color: #334155; font-size: 15px; line-height: 1.6;">Here is your report for the ${reportType.toLowerCase() === 'weekly' ? 'week' : 'month'}.</p>
           
           <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 20px 0 25px 0;">All details of your starting and ending balances, income, expenditure categories, and bank-wise transaction breakdowns have been compiled securely inside the attached PDF to protect your privacy.</p>
- 
-          <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px; margin: 20px 0; border-radius: 4px;">
-            <p style="margin: 0; font-size: 13px; color: #b45309; line-height: 1.5;">
-              <strong>Note:</strong> Since we are running on Resend's developer testing tier, reports will be emailed to your authenticated user account address. Ensure your email is registered in your developer dashboard.
-            </p>
-          </div>
           
           <p style="color: #64748b; font-size: 13px; text-align: center; margin-top: 35px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
             Best regards,<br>
