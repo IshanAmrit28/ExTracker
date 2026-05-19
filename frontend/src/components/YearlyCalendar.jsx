@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { formatDateToYYYYMMDD } from '../utils/dateUtils';
 
 const YearlyCalendar = ({ transactions }) => {
   const currentYear = new Date().getFullYear();
@@ -10,7 +11,7 @@ const YearlyCalendar = ({ transactions }) => {
     const endDate = new Date(currentYear, 11, 31);
     
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = formatDateToYYYYMMDD(d);
       data[dateStr] = 0;
     }
 

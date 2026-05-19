@@ -12,13 +12,11 @@ const authRoutes = require('./routes/auth');
 const app = express();
 
 // Middleware
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "https://extracker-jade.vercel.app"
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -33,12 +31,16 @@ app.use('/api/budget', budgetRoutes);
 app.use('/api/settings', settingsRoutes);
 
 // Database Connection
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 const MONGO_URI = process.env.MONGO_URI;
+
+const { initCronJobs } = require('./utils/cronJobs');
 
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('Connected to MongoDB');
+    // Initialize weekly scheduled cron jobs
+    initCronJobs();
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

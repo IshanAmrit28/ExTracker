@@ -1,0 +1,65 @@
+name: Scheduled Report Emails
+
+on:
+  schedule:
+    # Run everyday at 18:30 UTC.
+    # 18:30 UTC is exactly 00:00 (midnight) IST of the next calendar day.
+    # So:
+    # - On Sunday night 18:30 UTC (Monday 00:00 IST), it runs. The script detects Monday in IST and triggers Weekly Reports.
+    # - On the last day of the month at 18:30 UTC (1st of the next month 00:00 IST), it runs. The script detects the 1st of the month in IST and triggers Monthly Reports.
+    # - On all other days, it checks and gracefully skips unless triggered manually.
+    - cron: '30 18 * * *'
+  
+  workflow_dispatch:
+    inputs:
+      report_type:
+        description: 'Report Type to send'
+        required: true
+        type: choice
+        options:
+          - auto
+          - weekly
+          - monthly
+          - both
+        default: 'auto'
+      custom_time:
+        description: 'Custom date/time to check timezone conversion (e.g. ISO string or empty for current)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  send-reports:
+    runs-on: ubuntu-latest
+    
+    # Force the runner's timezone to UTC so that getTimezoneOffset() always returns 0.
+    # This guarantees the checkAndConvertToIST timezone conversion behaves consistently
+    # regardless of GitHub Actions standard environment configurations.
+    env:
+      TZ: UTC
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Run Report Action
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          GIVEN_TIME: ${{ github.event.inputs.custom_time }}
+          REPORT_TYPE: ${{ github.event.inputs.report_type || 'auto' }}
+        run: |
+          node backend/scripts/sendReports.js

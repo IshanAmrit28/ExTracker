@@ -11,4 +11,12 @@ router.get('/', auth, settingsController.getSettings);
 // @desc    Update user settings
 router.post('/', auth, settingsController.updateSettings);
 
+// @route   POST /api/settings/send-weekly-report
+// @desc    Manually generate and send weekly report PDF
+router.post('/send-weekly-report', auth, settingsController.sendWeeklyReport);
+
+// @route   POST /api/settings/send-monthly-report
+// @desc    Manually generate and send monthly report PDF
+router.post('/send-monthly-report', auth, settingsController.sendMonthlyReport);
+
 module.exports = router;

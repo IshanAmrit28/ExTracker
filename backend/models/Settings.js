@@ -7,6 +7,11 @@ const categorySchema = new mongoose.Schema({
   paymentMode: String
 });
 
+const bankSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  services: { type: [String], default: ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer'] }
+});
+
 const settingsSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -57,6 +62,14 @@ const settingsSchema = new mongoose.Schema({
   paymentModes: {
     type: [String],
     default: ['Credit Card', 'Debit Card', 'UPI', 'Cash', 'Bank Transfer']
+  },
+  banks: {
+    type: [bankSchema],
+    default: [
+      { name: 'Cash / Wallet', services: ['Cash'] },
+      { name: 'HDFC Bank', services: ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer'] },
+      { name: 'SBI Bank', services: ['UPI', 'Debit Card', 'Bank Transfer'] }
+    ]
   }
 }, { 
   timestamps: true,

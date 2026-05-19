@@ -1,13 +1,22 @@
 import { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { getLocalMonthString } from '../utils/dateUtils';
 
 const COLORS = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#f97316', '#8b5cf6', '#ec4899'];
 
 const MonthlyAnalysis = ({ transactions, settings }) => {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(getLocalMonthString());
+  const [filterBank, setFilterBank] = useState('All');
 
   const { thisMonthTx, pieData, dailyData } = useMemo(() => {
-    const tx = transactions.filter(t => t.date.startsWith(selectedMonth));
+    let tx = transactions.filter(t => t.date.startsWith(selectedMonth));
+    
+    if (filterBank !== 'All') {
+      tx = tx.filter(t => {
+        const tBank = t.bank || 'Cash / Wallet';
+        return tBank.toLowerCase() === filterBank.toLowerCase();
+      });
+    }
     
     // Pie Data (excluding savings)
     const expensesByCategory = {};
@@ -43,7 +52,7 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
     })).sort((a, b) => a.date.localeCompare(b.date));
 
     return { thisMonthTx: tx, pieData: pie, dailyData: daily };
-  }, [transactions, selectedMonth]);
+  }, [transactions, selectedMonth, filterBank]);
 
   return (
     <div className="fade-in">
@@ -52,9 +61,27 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
         <p>Granular look at your categorized spending and daily expenses.</p>
       </header>
 
-      <div className="form-group" style={{ maxWidth: '200px', marginBottom: '2rem' }}>
-        <label>Select Month</label>
-        <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} />
+      <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <div className="form-group" style={{ maxWidth: '200px', flex: 1 }}>
+          <label>Select Month</label>
+          <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} />
+        </div>
+        <div className="form-group" style={{ maxWidth: '200px', flex: 1 }}>
+          <label>Select Bank / Account</label>
+          <select 
+            value={filterBank} 
+            onChange={(e) => setFilterBank(e.target.value)}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '0.95rem', cursor: 'pointer' }}
+          >
+            <option value="All">All Accounts</option>
+            {settings.banks && settings.banks.map(b => (
+              <option key={b.name} value={b.name}>{b.name}</option>
+            ))}
+            {(!settings.banks || settings.banks.length === 0) && (
+              <option value="Cash / Wallet">Cash / Wallet</option>
+            )}
+          </select>
+        </div>
       </div>
 
       <div className="dashboard" style={{ gridTemplateColumns: '1fr 1fr' }}>

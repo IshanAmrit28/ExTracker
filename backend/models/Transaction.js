@@ -38,6 +38,12 @@ const transactionSchema = new mongoose.Schema({
     get: decrypt,
     set: encrypt
   },
+  bank: {
+    type: String,
+    default: 'Cash / Wallet',
+    get: decrypt,
+    set: encrypt
+  },
   amount: {
     type: String,
     required: true,

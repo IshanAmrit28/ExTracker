@@ -166,6 +166,11 @@ body {
   font-family: inherit;
 }
 
+select option {
+  background-color: #111111;
+  color: #ffffff;
+}
+
 .form-group input:focus, .form-group select:focus {
   outline: none;
   border-color: var(--primary-color);
@@ -185,6 +190,30 @@ body {
   transition: opacity 0.2s, transform 0.1s;
 }
 .btn-primary:hover { opacity: 0.9; }
+
+.btn-secondary {
+  width: 100%;
+  padding: 1rem 2rem;
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.btn-secondary:hover {
+  background: rgba(249, 115, 22, 0.1);
+}
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 /* Tables */
 .table-responsive { width: 100%; }
@@ -283,4 +312,179 @@ body {
 .auth-toggle:hover {
   color: var(--primary-color);
   text-decoration: underline;
+}
+
+/* Base header styles (hidden on desktop) */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-close-btn {
+  display: none;
+}
+
+.mobile-header {
+  display: none;
+}
+
+/* Mobile Responsive Styling */
+@media (max-width: 768px) {
+  .app-wrapper {
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Mobile Top Navbar */
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    height: 60px;
+    width: 100%;
+    z-index: 99;
+    flex-shrink: 0;
+  }
+
+  .mobile-title {
+    font-size: 1.25rem;
+    font-weight: 850;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #fdba74 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .menu-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+  }
+
+  .menu-toggle-btn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Adjust Main Content area for mobile */
+  .main-content {
+    padding: 1.5rem 1rem;
+    height: calc(100vh - 60px);
+    width: 100%;
+    overflow-y: auto;
+  }
+
+  /* Sidebar transition to responsive Drawer on mobile */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.7);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Close button only visible on mobile */
+  .sidebar-close-btn {
+    display: flex;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+
+  .sidebar-close-btn:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Drawer Backdrop */
+  .sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    animation: fadeInBackdrop 0.2s ease-out;
+  }
+
+  @keyframes fadeInBackdrop {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Stack form rows */
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Top Metrics Dashboard stacking */
+  .top-metrics {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  /* Adjust grid layout in monthly analysis etc. */
+  .dashboard {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem;
+  }
+
+  /* Setup elements stack */
+  .setup-form .btn-primary {
+    width: 100%;
+  }
+
+  /* Table responsiveness and visual spacing */
+  .data-table th, .data-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .page-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .page-header p {
+    font-size: 0.95rem;
+  }
+
+  /* Adjust Yearly Heatmap overflow */
+  .heatmap-container {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Grid layout for monthly analysis */
+  .monthly-grid {
+    grid-template-columns: 1fr !important;
+  }
 }

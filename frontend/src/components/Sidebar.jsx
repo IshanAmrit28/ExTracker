@@ -1,9 +1,17 @@
-import { LayoutDashboard, Receipt, BarChart3, PieChart, CalendarDays, Settings, LogOut, Banknote } from 'lucide-react';
+import { LayoutDashboard, Receipt, BarChart3, PieChart, CalendarDays, Settings, LogOut, Banknote, X } from 'lucide-react';
 
-const Sidebar = ({ activeTab, setActiveTab, handleLogout }) => {
+const Sidebar = ({ activeTab, setActiveTab, handleLogout, isOpen, setIsOpen }) => {
   return (
-    <aside className="sidebar">
-      <h1>FinanceTracker</h1>
+    <>
+      {isOpen && <div className="sidebar-backdrop" onClick={() => setIsOpen(false)}></div>}
+      
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <h1>FinanceTracker</h1>
+          <button className="sidebar-close-btn" onClick={() => setIsOpen(false)} aria-label="Close menu">
+            <X size={20} />
+          </button>
+        </div>
       <nav className="nav-menu" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <button className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
           <LayoutDashboard size={20} />
@@ -42,6 +50,7 @@ const Sidebar = ({ activeTab, setActiveTab, handleLogout }) => {
         </div>
       </nav>
     </aside>
+    </>
   );
 };
 

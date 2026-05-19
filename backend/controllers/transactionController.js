@@ -18,6 +18,7 @@ exports.createTransaction = async (req, res) => {
     category: req.body.category,
     type: req.body.type,
     paymentMode: req.body.paymentMode || 'UPI',
+    bank: req.body.bank || 'Cash / Wallet',
     amount: req.body.amount,
     notes: req.body.notes
   });
@@ -53,11 +54,7 @@ exports.getSummary = async (req, res) => {
     const allTransactions = await Transaction.find({ userId: req.user.id });
     
     const transactions = allTransactions.filter(t => {
-      if (!t.date) return false;
-      const d = new Date(t.date);
-      const start = new Date(`${yearMonth}-01`);
-      const end = new Date(`${yearMonth}-31`);
-      return d >= start && d < end;
+      return t.date && t.date.startsWith(yearMonth);
     });
 
     const income = transactions.filter(t => t.type === 'income' || t.type === 'Income').reduce((acc, curr) => acc + curr.amount, 0);

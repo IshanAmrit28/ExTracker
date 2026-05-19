@@ -10,6 +10,7 @@ import WeeklyAnalysis from './components/WeeklyAnalysis';
 import YearlyCalendar from './components/YearlyCalendar';
 import Auth from './components/Auth';
 import { Analytics } from "@vercel/analytics/react";
+import { Menu } from 'lucide-react';
 import './App.css';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
@@ -21,6 +22,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [transactions, setTransactions] = useState([]);
   const [settings, setSettings] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -94,7 +96,24 @@ function App() {
 
   return (
     <div className="app-wrapper">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} handleLogout={handleLogout} />
+      <header className="mobile-header">
+        <button className="menu-toggle-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
+          <Menu size={24} />
+        </button>
+        <span className="mobile-title">FinanceTracker</span>
+        <div style={{ width: 24 }}></div>
+      </header>
+
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          setSidebarOpen(false);
+        }} 
+        handleLogout={handleLogout} 
+        isOpen={sidebarOpen}
+        setIsOpen={setSidebarOpen}
+      />
       <div className="main-content">
         {renderContent()}
       </div>
