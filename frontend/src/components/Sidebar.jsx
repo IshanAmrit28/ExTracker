@@ -37,6 +37,10 @@ const Sidebar = ({ activeTab, setActiveTab, handleLogout, isOpen, setIsOpen }) =
           <CalendarDays size={20} />
           <span>Yearly Calendar</span>
         </button>
+        <button className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>
+          <PieChart size={20} />
+          <span>Reports & Diagnostics</span>
+        </button>
         <button className={`nav-item ${activeTab === 'setup' ? 'active' : ''}`} onClick={() => setActiveTab('setup')}>
           <Settings size={20} />
           <span>Setup</span>

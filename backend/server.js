@@ -5,9 +5,9 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const transactionRoutes = require('./routes/transactions');
-const budgetRoutes = require('./routes/budget');
 const settingsRoutes = require('./routes/settings');
 const authRoutes = require('./routes/auth');
+const reportsRoutes = require('./routes/reports');
 
 const app = express();
 
@@ -27,8 +27,8 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
-app.use('/api/budget', budgetRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // Database Connection
 const PORT = process.env.PORT;

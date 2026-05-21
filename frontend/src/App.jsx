@@ -8,6 +8,7 @@ import IncomeTracker from './components/IncomeTracker';
 import MonthlyAnalysis from './components/MonthlyAnalysis';
 import WeeklyAnalysis from './components/WeeklyAnalysis';
 import YearlyCalendar from './components/YearlyCalendar';
+import ReportsAndDiagnostics from './components/ReportsAndDiagnostics';
 import Auth from './components/Auth';
 import { Analytics } from "@vercel/analytics/react";
 import { Menu } from 'lucide-react';
@@ -19,6 +20,10 @@ const SETTINGS_URL = `${API_BASE_URL}/api/settings`;
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('user');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [activeTab, setActiveTab] = useState('dashboard');
   const [transactions, setTransactions] = useState([]);
   const [settings, setSettings] = useState(null);
@@ -58,6 +63,8 @@ function App() {
 
   const handleLogout = () => {
     setToken('');
+    setUser(null);
+    localStorage.removeItem('user');
     setSettings(null);
     setTransactions([]);
   };
@@ -65,7 +72,7 @@ function App() {
   if (!token) {
     return (
       <>
-        <Auth setToken={setToken} />
+        <Auth setToken={setToken} setUser={setUser} />
         <Analytics />
       </>
     );
@@ -87,8 +94,10 @@ function App() {
         return <WeeklyAnalysis transactions={transactions} settings={settings} />;
       case 'yearlyCalendar':
         return <YearlyCalendar transactions={transactions} />;
+      case 'reports':
+        return <ReportsAndDiagnostics transactions={transactions} settings={settings} user={user} />;
       case 'setup':
-        return <Setup settings={settings} fetchSettings={fetchSettings} />;
+        return <Setup settings={settings} fetchSettings={fetchSettings} user={user} />;
       default:
         return <Dashboard transactions={transactions} settings={settings} />;
     }

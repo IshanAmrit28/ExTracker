@@ -4,7 +4,7 @@ import { Trash2, Plus, Check } from 'lucide-react';
 
 const ALL_SERVICES = ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer', 'Cash'];
 
-const Setup = ({ settings, fetchSettings }) => {
+const Setup = ({ settings, fetchSettings, user }) => {
   const [loadingReport, setLoadingReport] = useState(false);
   const [loadingMonthlyReport, setLoadingMonthlyReport] = useState(false);
   const [formData, setFormData] = useState({
@@ -398,33 +398,35 @@ const Setup = ({ settings, fetchSettings }) => {
         </div>
       </div>
 
-      <div className="card setup-card" style={{ marginTop: '2rem' }}>
-        <h3>Financial Diagnostics & Reports</h3>
-        <p className="helper-text" style={{ marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: '1.5' }}>
-          Generate comprehensive audit reports of your credited and debited transactions, starting/ending balances, and category-wise spending distributions. Beautifully formatted PDFs will be compiled and sent directly to your registered email address.
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-          <button 
-            type="button" 
-            className="btn-primary" 
-            onClick={handleRequestWeeklyReport} 
-            disabled={loadingReport || loadingMonthlyReport}
-            style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--primary-color)' }}
-          >
-            {loadingReport ? 'Generating Weekly Report...' : 'Email Me My Weekly Report Now'}
-          </button>
+      {user?.isPremium && (
+        <div className="card setup-card" style={{ marginTop: '2rem' }}>
+          <h3>Financial Diagnostics & Reports</h3>
+          <p className="helper-text" style={{ marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: '1.5' }}>
+            Generate comprehensive audit reports of your credited and debited transactions, starting/ending balances, and category-wise spending distributions. Beautifully formatted PDFs will be compiled and sent directly to your registered email address.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+            <button 
+              type="button" 
+              className="btn-primary" 
+              onClick={handleRequestWeeklyReport} 
+              disabled={loadingReport || loadingMonthlyReport}
+              style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--primary-color)' }}
+            >
+              {loadingReport ? 'Generating Weekly Report...' : 'Email Me My Weekly Report Now'}
+            </button>
 
-          <button 
-            type="button" 
-            className="btn-secondary" 
-            onClick={handleRequestMonthlyReport} 
-            disabled={loadingReport || loadingMonthlyReport}
-            style={{ width: 'auto' }}
-          >
-            {loadingMonthlyReport ? 'Generating Monthly Report...' : 'Email Me My Monthly Report Now'}
-          </button>
+            <button 
+              type="button" 
+              className="btn-secondary" 
+              onClick={handleRequestMonthlyReport} 
+              disabled={loadingReport || loadingMonthlyReport}
+              style={{ width: 'auto' }}
+            >
+              {loadingMonthlyReport ? 'Generating Monthly Report...' : 'Email Me My Monthly Report Now'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
