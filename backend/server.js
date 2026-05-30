@@ -12,11 +12,12 @@ const reportsRoutes = require('./routes/reports');
 const app = express();
 
 // Middleware
-const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
-
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: function(origin, callback) {
+      // Reflect the request origin. This allows dynamic Vercel URLs to work without hardcoding them.
+      callback(null, true);
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
