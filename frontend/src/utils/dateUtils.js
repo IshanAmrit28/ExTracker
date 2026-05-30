@@ -21,7 +21,11 @@ export const formatDateDisplay = (dateString) => {
   const parts = datePart.split('-');
   if (parts.length === 3) {
     const [year, month, day] = parts;
-    return new Date(year, month - 1, day).toLocaleDateString();
+    return `${day}/${month}/${year}`;
   }
-  return new Date(dateString).toLocaleDateString();
+  const d = new Date(dateString);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
 };
