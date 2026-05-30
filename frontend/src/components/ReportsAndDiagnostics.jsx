@@ -98,7 +98,7 @@ const ReportsAndDiagnostics = ({ transactions, settings, user }) => {
   const getGroupedTxs = (txs) => {
     const groupedTxs = {};
     txs.forEach(t => {
-      const bank = t.bank || 'Cash / Wallet';
+      const bank = t.bank || '';
       if (!groupedTxs[bank]) groupedTxs[bank] = { txs: [], income: 0, expense: 0, balance: 0 };
       groupedTxs[bank].txs.push(t);
       if (t.type.toLowerCase() === 'income') {

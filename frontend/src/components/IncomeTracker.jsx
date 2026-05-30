@@ -10,8 +10,8 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
     amount: '',
     category: 'Income',
     type: 'Income',
-    bank: settings?.banks?.[0]?.name || 'Cash / Wallet',
-    paymentMode: settings?.banks?.[0]?.services?.[0] || 'Cash',
+    bank: settings?.banks?.[0]?.name || '',
+    paymentMode: settings?.banks?.[0]?.services?.[0] || '',
     date: getLocalDateString()
   });
 
@@ -51,9 +51,9 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
         amount: '',
         category: 'Income',
         type: 'Income',
-        bank: defaultBank?.name || 'Cash / Wallet',
-        paymentMode: defaultBank?.services?.[0] || 'Cash',
-        date: getLocalDateString()
+        bank: defaultBank?.name || '',
+        paymentMode: defaultBank?.services?.[0] || '',
+        date: formData.date
       });
       alert('Income added!');
     } catch (err) {
@@ -76,7 +76,7 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
 
   const filteredIncome = incomeTransactions.filter(t => {
     if (filterBank === 'All') return true;
-    const tBank = t.bank || 'Cash / Wallet';
+    const tBank = t.bank || '';
     return tBank.toLowerCase() === filterBank.toLowerCase();
   });
 
@@ -113,16 +113,13 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
                 {settings.banks && settings.banks.map(b => (
                   <option key={b.name} value={b.name}>{b.name}</option>
                 ))}
-                {(!settings.banks || settings.banks.length === 0) && (
-                  <option value="Cash / Wallet">Cash / Wallet</option>
-                )}
               </select>
             </div>
             <div className="form-group flex-1">
               <label>Payment Mode (Service)</label>
               <select name="paymentMode" value={formData.paymentMode} onChange={handleChange} required>
                 {(() => {
-                  const selectedBankName = formData.bank || settings?.banks?.[0]?.name || 'Cash / Wallet';
+                  const selectedBankName = formData.bank || settings?.banks?.[0]?.name || '';
                   const selectedBankObj = settings?.banks?.find(b => b.name === selectedBankName);
                   const supportedServices = selectedBankObj ? selectedBankObj.services : ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer', 'Cash'];
                   return supportedServices.map(pm => (
@@ -158,9 +155,6 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
               {settings.banks && settings.banks.map(b => (
                 <option key={b.name} value={b.name}>{b.name}</option>
               ))}
-              {(!settings.banks || settings.banks.length === 0) && (
-                <option value="Cash / Wallet">Cash / Wallet</option>
-              )}
             </select>
           </div>
         </div>
@@ -194,7 +188,7 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
                   <td className="amount income">
                     ₹{t.amount.toFixed(2)}
                   </td>
-                  <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{t.bank || 'Cash / Wallet'}</td>
+                  <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{t.bank || ''}</td>
                   <td style={{ color: '#3b82f6' }}>{t.paymentMode}</td>
                   <td>
                     <button type="button" className="delete-btn" onClick={() => handleDelete(t._id)} style={{ padding: '4px' }}>

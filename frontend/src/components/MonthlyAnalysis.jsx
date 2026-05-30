@@ -13,7 +13,7 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
     
     if (filterBank !== 'All') {
       tx = tx.filter(t => {
-        const tBank = t.bank || 'Cash / Wallet';
+        const tBank = t.bank || '';
         return tBank.toLowerCase() === filterBank.toLowerCase();
       });
     }
@@ -77,9 +77,6 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
             {settings.banks && settings.banks.map(b => (
               <option key={b.name} value={b.name}>{b.name}</option>
             ))}
-            {(!settings.banks || settings.banks.length === 0) && (
-              <option value="Cash / Wallet">Cash / Wallet</option>
-            )}
           </select>
         </div>
       </div>

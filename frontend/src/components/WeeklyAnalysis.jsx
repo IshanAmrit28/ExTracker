@@ -16,7 +16,7 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
       if (t.type === 'Income' || t.type === 'Saving' || t.type === 'income') return;
       if (filterMode !== 'All' && t.category !== filterMode) return;
       
-      const tBank = t.bank || 'Cash / Wallet';
+      const tBank = t.bank || '';
       if (filterBank !== 'All' && tBank.toLowerCase() !== filterBank.toLowerCase()) return;
       
       const date = new Date(t.date);
@@ -64,9 +64,6 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
               {settings.banks && settings.banks.map(b => (
                 <option key={b.name} value={b.name}>{b.name}</option>
               ))}
-              {(!settings.banks || settings.banks.length === 0) && (
-                <option value="Cash / Wallet">Cash / Wallet</option>
-              )}
             </select>
           </div>
         </div>

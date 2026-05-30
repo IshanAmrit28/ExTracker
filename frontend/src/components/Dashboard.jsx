@@ -133,7 +133,7 @@ const Dashboard = ({ transactions, settings }) => {
         }
         
         transactions.forEach(t => {
-          const tBank = t.bank || 'Cash / Wallet';
+          const tBank = t.bank || '';
           if (!(tBank in bankBalances)) {
             bankBalances[tBank] = { name: tBank, credited: 0, spent: 0, balance: 0 };
           }
@@ -147,7 +147,10 @@ const Dashboard = ({ transactions, settings }) => {
           }
         });
 
-        const bankList = Object.values(bankBalances);
+        const activeBankNames = settings?.banks?.length > 0 
+          ? settings.banks.map(b => b.name) 
+          : [];
+        const bankList = Object.values(bankBalances).filter(b => activeBankNames.includes(b.name));
 
         return (
           <div className="card" style={{ marginTop: '2rem' }}>

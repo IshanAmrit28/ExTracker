@@ -11,8 +11,8 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
     amount: '',
     category: settings?.categories?.[0]?.name || '',
     type: settings?.categories?.[0]?.type || 'Need',
-    bank: settings?.banks?.[0]?.name || 'Cash / Wallet',
-    paymentMode: settings?.banks?.[0]?.services?.[0] || 'Cash',
+    bank: settings?.banks?.[0]?.name || '',
+    paymentMode: settings?.banks?.[0]?.services?.[0] || '',
     date: getLocalDateString()
   });
 
@@ -68,9 +68,9 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
         amount: '',
         category: defaultCat?.name || '',
         type: defaultCat?.type || 'Need',
-        bank: defaultBank?.name || 'Cash / Wallet',
-        paymentMode: defaultBank?.services?.[0] || 'Cash',
-        date: getLocalDateString()
+        bank: defaultBank?.name || '',
+        paymentMode: defaultBank?.services?.[0] || '',
+        date: formData.date
       });
       alert('Transaction added!');
     } catch (err) {
@@ -130,16 +130,13 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
                 {settings.banks && settings.banks.map(b => (
                   <option key={b.name} value={b.name}>{b.name}</option>
                 ))}
-                {(!settings.banks || settings.banks.length === 0) && (
-                  <option value="Cash / Wallet">Cash / Wallet</option>
-                )}
               </select>
             </div>
             <div className="form-group flex-1">
               <label>Payment Mode</label>
               <select name="paymentMode" value={formData.paymentMode} onChange={handleChange}>
                 {(() => {
-                  const selectedBankName = formData.bank || settings?.banks?.[0]?.name || 'Cash / Wallet';
+                  const selectedBankName = formData.bank || settings?.banks?.[0]?.name || '';
                   const selectedBankObj = settings?.banks?.find(b => b.name === selectedBankName);
                   const supportedServices = selectedBankObj ? selectedBankObj.services : ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer', 'Cash'];
                   return supportedServices.map(pm => (
@@ -179,7 +176,7 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
         {(() => {
           const filteredTransactions = transactions.filter(t => {
             if (filterBank === 'All') return true;
-            const tBank = t.bank || 'Cash / Wallet';
+            const tBank = t.bank || '';
             return tBank.toLowerCase() === filterBank.toLowerCase();
           });
 
@@ -210,9 +207,6 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
                     {settings.banks && settings.banks.map(b => (
                       <option key={b.name} value={b.name}>{b.name}</option>
                     ))}
-                    {(!settings.banks || settings.banks.length === 0) && (
-                      <option value="Cash / Wallet">Cash / Wallet</option>
-                    )}
                   </select>
                 </div>
               </div>
@@ -249,7 +243,7 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
                         <td className={`amount ${['Need', 'Want', 'expense'].includes(t.type) ? 'expense' : t.type === 'Saving' ? 'saving' : 'income'}`}>
                           ₹{t.amount.toFixed(2)}
                         </td>
-                        <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{t.bank || 'Cash / Wallet'}</td>
+                        <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{t.bank || ''}</td>
                         <td style={{ color: '#3b82f6' }}>{t.paymentMode}</td>
                         <td><span className={`badge-type ${t.type.toLowerCase()}`}>{t.type}</span></td>
                         <td>
