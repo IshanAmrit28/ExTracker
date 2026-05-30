@@ -94,7 +94,7 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
           <div className="form-row">
             <div className="form-group flex-1">
               <label>Date</label>
-              <input type="date" name="date" value={formData.date} onChange={handleChange} required />
+              <input type="date" name="date" value={formData.date} onChange={handleChange} onClick={(e) => e.target.showPicker && e.target.showPicker()} onFocus={(e) => e.target.showPicker && e.target.showPicker()} required />
             </div>
             <div className="form-group" style={{ flex: 2 }}>
               <label>Source / Description</label>

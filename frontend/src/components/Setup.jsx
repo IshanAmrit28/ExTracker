@@ -21,6 +21,16 @@ const Setup = ({ settings, fetchSettings, user }) => {
   const [newBankName, setNewBankName] = useState('');
   const [selectedServices, setSelectedServices] = useState(['UPI', 'Debit Card']);
 
+  const saveSettingsToBackend = async (newFormData) => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+      await axios.post(`${API_BASE_URL}/api/settings`, newFormData);
+      fetchSettings();
+    } catch (err) {
+      console.error('Error auto-saving settings:', err);
+    }
+  };
+
   const toggleBankService = (bankIndex, serviceName) => {
     const updatedBanks = formData.banks.map((bank, idx) => {
       if (idx === bankIndex) {
@@ -32,12 +42,16 @@ const Setup = ({ settings, fetchSettings, user }) => {
       }
       return bank;
     });
-    setFormData(prev => ({ ...prev, banks: updatedBanks }));
+    const newFormData = { ...formData, banks: updatedBanks };
+    setFormData(newFormData);
+    saveSettingsToBackend(newFormData);
   };
 
   const deleteBank = (bankIndex) => {
     const updatedBanks = formData.banks.filter((_, idx) => idx !== bankIndex);
-    setFormData(prev => ({ ...prev, banks: updatedBanks }));
+    const newFormData = { ...formData, banks: updatedBanks };
+    setFormData(newFormData);
+    saveSettingsToBackend(newFormData);
   };
 
   const toggleNewBankService = (service) => {
@@ -62,10 +76,9 @@ const Setup = ({ settings, fetchSettings, user }) => {
       services: selectedServices
     };
 
-    setFormData(prev => ({
-      ...prev,
-      banks: [...prev.banks, newBank]
-    }));
+    const newFormData = { ...formData, banks: [...formData.banks, newBank] };
+    setFormData(newFormData);
+    saveSettingsToBackend(newFormData);
     setNewBankName('');
     setSelectedServices(['UPI', 'Debit Card']);
   };
