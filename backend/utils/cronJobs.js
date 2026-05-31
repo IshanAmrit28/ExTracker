@@ -315,30 +315,41 @@ const generateAndSendMonthlyReportForUser = async (user, isAutomatic = false, re
 };
 
 const initCronJobs = () => {
-  // Schedule to run every Sunday night at 23:59 (11:59 PM)
+  // Schedule to run every Sunday night at 23:59 (11:59 PM) IST
   cron.schedule('59 23 * * 0', async () => {
     console.log('Running scheduled weekly financial report cron job...');
     try {
+      // Calculate a safe reference date that falls securely on Sunday, 
+      // preventing a slight execution delay from rolling over to Monday 
+      // and causing a 1-day (Monday-to-Monday) report bug.
+      const safeDateForSunday = new Date(Date.now() - 2 * 60 * 60 * 1000); // -2 hours
       const users = await User.find({});
       for (const user of users) {
-        await generateAndSendReportForUser(user, true);
+        await generateAndSendReportForUser(user, true, safeDateForSunday);
       }
     } catch (err) {
       console.error('Error running weekly report cron job:', err);
     }
+  }, {
+    timezone: 'Asia/Kolkata'
   });
 
-  // Schedule to run monthly on the 1st of every month at 00:00 (12:00 AM)
+  // Schedule to run monthly on the 1st of every month at 00:00 (12:00 AM) IST
   cron.schedule('0 0 1 * *', async () => {
     console.log('Running scheduled monthly financial report cron job...');
     try {
+      // A safe reference date in case of early/late clock drift around midnight.
+      // Since we want this to represent the 1st of the month, adding 2 hours is safe.
+      const safeDateFor1st = new Date(Date.now() + 2 * 60 * 60 * 1000); // +2 hours
       const users = await User.find({});
       for (const user of users) {
-        await generateAndSendMonthlyReportForUser(user, true);
+        await generateAndSendMonthlyReportForUser(user, true, safeDateFor1st);
       }
     } catch (err) {
       console.error('Error running monthly report cron job:', err);
     }
+  }, {
+    timezone: 'Asia/Kolkata'
   });
 };
 

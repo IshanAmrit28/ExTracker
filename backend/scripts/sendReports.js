@@ -26,9 +26,6 @@ const getISTComponents = (date) => {
 
 const checkAndConvertToIST = (timeInput) => {
   let date;
-  let isString = typeof timeInput === 'string';
-  let originalStr = isString ? timeInput : '';
-
   if (!timeInput) {
     date = new Date();
   } else if (timeInput instanceof Date) {
@@ -41,47 +38,12 @@ const checkAndConvertToIST = (timeInput) => {
     throw new Error(`Invalid date/time provided: ${timeInput}`);
   }
 
-  console.log(`[Timezone Check] Analyzing given time: "${date.toISOString()}"`);
-  
-  let isIST = false;
-  
-  // 1. Check if the string representation has an explicit IST indicator
-  if (originalStr) {
-    const normalized = originalStr.toLowerCase();
-    if (
-      normalized.includes('+05:30') || 
-      normalized.includes('+0530') || 
-      normalized.includes('ist') || 
-      normalized.includes('asia/kolkata')
-    ) {
-      isIST = true;
-    }
-  }
-  
-  // 2. Check the system's timezone offset.
-  // IST offset relative to UTC is -330 minutes (UTC+5:30).
-  const offset = date.getTimezoneOffset();
-  if (offset === -330) {
-    isIST = true;
-  }
-  
-  if (isIST) {
-    console.log(`[Timezone Check] SUCCESS: The given time is ALREADY in Indian Standard Time (IST).`);
-    return date;
-  } else {
-    console.log(`[Timezone Check] NOTICE: The given time is NOT in IST. Converting to IST...`);
-    
-    // Convert to IST:
-    // To represent the exact local time in IST timezone when running on any system timezone,
-    // we shift the date object by adding the appropriate timezone offset difference.
-    const utcTimestamp = date.getTime() + (date.getTimezoneOffset() * 60000);
-    const istTimestamp = utcTimestamp + (330 * 60000); // Add 5 hours and 30 minutes in ms
-    
-    const convertedDate = new Date(istTimestamp);
-    
-    console.log(`[Timezone Check] CONVERTED: Original time: ${date.toISOString()} -> Converted IST representation: ${convertedDate.toISOString()}`);
-    return convertedDate;
-  }
+  // A JavaScript Date object internally tracks time as milliseconds since the Unix Epoch (UTC).
+  // Timezones only apply when parsing strings or formatting outputs (like Intl.DateTimeFormat).
+  // We do not need to manually add/subtract offset milliseconds, because getISTComponents 
+  // uses Intl.DateTimeFormat with 'Asia/Kolkata', which correctly calculates the IST time 
+  // from the universal Date object.
+  return date;
 };
 
 const run = async () => {
@@ -189,7 +151,10 @@ const run = async () => {
       if (shouldRunWeekly) {
         console.log(`Generating & sending Weekly Report...`);
         try {
-          await generateAndSendReportForUser(user, true, referenceDate);
+          // If auto-triggered early Monday morning IST, shift the reference date back 12 hours 
+          // so it strictly falls on the intended Sunday, preventing a Monday-to-Monday report.
+          const weeklyTargetDate = new Date(referenceDate.getTime() - 12 * 60 * 60 * 1000);
+          await generateAndSendReportForUser(user, true, weeklyTargetDate);
         } catch (err) {
           console.error(`Failed to send weekly report for ${user.email}:`, err.message);
         }
