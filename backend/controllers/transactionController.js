@@ -1,8 +1,28 @@
 const Transaction = require('../models/Transaction');
 
+const migrateTransactions = async (transactions) => {
+  for (let t of transactions) {
+    let newCat = null;
+    let newType = null;
+    
+    if (t.category === 'Life Infrastructure') { newCat = 'Groceries'; newType = 'Need'; }
+    else if (t.category === 'Future Me') { newCat = 'Savings & Investments'; newType = 'Saving'; }
+    else if (t.category === 'Performance & Growth') { newCat = 'Essentials'; newType = 'Need'; }
+    else if (t.category === 'Relationships & Generosity') { newCat = 'Essentials'; newType = 'Want'; }
+    else if (t.category === 'Lifestyle Enjoyment') { newCat = 'Entertainment'; newType = 'Want'; }
+
+    if (newCat) {
+      t.category = newCat;
+      if (newType) t.type = newType;
+      await t.save();
+    }
+  }
+};
+
 exports.getTransactions = async (req, res) => {
   try {
     const transactions = await Transaction.find({ userId: req.user.id });
+    await migrateTransactions(transactions);
     transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
     res.json(transactions);
   } catch (err) {
@@ -52,6 +72,7 @@ exports.getSummary = async (req, res) => {
   const { yearMonth } = req.params; // format: YYYY-MM
   try {
     const allTransactions = await Transaction.find({ userId: req.user.id });
+    await migrateTransactions(allTransactions);
     
     const transactions = allTransactions.filter(t => {
       return t.date && t.date.startsWith(yearMonth);

@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 const { encrypt, decrypt } = require('../utils/encryption');
 
 const categorySchema = new mongoose.Schema({
-  name: String,
-  type: { type: String, enum: ['Need', 'Want', 'Saving'] },
-  paymentMode: String
+  name: { type: String, required: true },
+  type: { type: String, required: false },
+  paymentMode: { type: String, required: false }
 });
 
 const bankSchema = new mongoose.Schema({
@@ -31,6 +31,12 @@ const settingsSchema = new mongoose.Schema({
     get: (val) => Number(decrypt(val)),
     set: encrypt
   },
+  monthlyLimit: { 
+    type: String, 
+    default: () => encrypt(0),
+    get: (val) => Number(decrypt(val)),
+    set: encrypt
+  },
   needsPercentage: { 
     type: String, 
     default: () => encrypt(50),
@@ -52,11 +58,16 @@ const settingsSchema = new mongoose.Schema({
   categories: {
     type: [categorySchema],
     default: [
-      { name: 'Life Infrastructure', type: 'Need', paymentMode: 'Credit Card' },
-      { name: 'Future Me', type: 'Saving', paymentMode: 'Debit Card' },
-      { name: 'Performance & Growth', type: 'Need', paymentMode: 'UPI' },
-      { name: 'Relationships & Generosity', type: 'Want', paymentMode: 'Cash' },
-      { name: 'Lifestyle Enjoyment', type: 'Want', paymentMode: 'Bank Transfer' }
+      { name: 'Bills & Utilities' },
+      { name: 'Entertainment' },
+      { name: 'Essentials' },
+      { name: 'Food & Dining' },
+      { name: 'Groceries' },
+      { name: 'Health' },
+      { name: 'Rent' },
+      { name: 'Shopping' },
+      { name: 'Transport' },
+      { name: 'Savings & Investments' }
     ]
   },
   paymentModes: {

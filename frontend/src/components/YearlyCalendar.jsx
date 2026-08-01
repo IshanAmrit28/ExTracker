@@ -5,7 +5,6 @@ const YearlyCalendar = ({ transactions }) => {
   const currentYear = new Date().getFullYear();
 
   const heatmapData = useMemo(() => {
-    // Generate all days in the current year
     const data = {};
     const startDate = new Date(currentYear, 0, 1);
     const endDate = new Date(currentYear, 11, 31);
@@ -15,7 +14,6 @@ const YearlyCalendar = ({ transactions }) => {
       data[dateStr] = 0;
     }
 
-    // Add spending
     transactions.forEach(t => {
       if (['Need', 'Want', 'expense'].includes(t.type)) {
         const dateStr = t.date.split('T')[0];
@@ -28,7 +26,6 @@ const YearlyCalendar = ({ transactions }) => {
     return data;
   }, [transactions, currentYear]);
 
-  // Group by month to render nicely
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   
   const getIntensityClass = (amount) => {
@@ -52,24 +49,30 @@ const YearlyCalendar = ({ transactions }) => {
             const daysInMonth = new Date(currentYear, monthIndex + 1, 0).getDate();
             const firstDayOfWeek = new Date(currentYear, monthIndex, 1).getDay();
             const days = [];
-            
+            let monthTotal = 0;
+
             for (let i = 0; i < firstDayOfWeek; i++) {
               days.push({ empty: true, key: `empty-${monthIndex}-${i}` });
             }
 
             for (let i = 1; i <= daysInMonth; i++) {
               const dateStr = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+              const amt = heatmapData[dateStr] || 0;
+              monthTotal += amt;
               days.push({
                 date: dateStr,
                 dayNum: i,
-                amount: heatmapData[dateStr] || 0
+                amount: amt
               });
             }
 
             return (
               <div key={month} className="heatmap-month">
-                <h4 style={{ marginBottom: '0.5rem', color: 'var(--primary-color)', fontSize: '1rem', textAlign: 'center' }}>{month}</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '6px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>
+                <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+                  <h4 style={{ color: 'var(--primary-color)', fontSize: '0.95rem', fontWeight: '700', margin: 0 }}>{month}</h4>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>₹{Math.round(monthTotal).toLocaleString()}</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '6px', textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>
                   <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
                 </div>
                 <div className="heatmap-grid">
@@ -80,7 +83,7 @@ const YearlyCalendar = ({ transactions }) => {
                       key={d.date} 
                       className={`heatmap-cell ${getIntensityClass(d.amount)}`}
                       title={`${d.date}: ₹${d.amount.toFixed(2)}`}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: d.amount > 0 ? 'rgba(255,255,255,0.9)' : 'var(--text-muted)' }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', color: d.amount > 0 ? 'rgba(255,255,255,0.95)' : 'var(--text-muted)' }}
                     >
                       {d.dayNum}
                     </div>
@@ -93,11 +96,11 @@ const YearlyCalendar = ({ transactions }) => {
 
         <div className="heatmap-legend">
           <span>Less</span>
-          <div className="heatmap-cell level-0"></div>
-          <div className="heatmap-cell level-1"></div>
-          <div className="heatmap-cell level-2"></div>
-          <div className="heatmap-cell level-3"></div>
-          <div className="heatmap-cell level-4"></div>
+          <div className="heatmap-cell level-0" title="No spend"></div>
+          <div className="heatmap-cell level-1" title="< ₹500"></div>
+          <div className="heatmap-cell level-2" title="₹500 - ₹1,500"></div>
+          <div className="heatmap-cell level-3" title="₹1,500 - ₹3,000"></div>
+          <div className="heatmap-cell level-4" title="> ₹3,000"></div>
           <span>More Spending</span>
         </div>
       </div>

@@ -78,7 +78,16 @@ function App() {
     );
   }
 
-  if (!settings) return <div className="loading" style={{color: 'white', textAlign: 'center', marginTop: '5rem'}}>Loading Finance Tracker...</div>;
+  if (!settings) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '1rem', backgroundColor: 'var(--bg-color)' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid var(--border)', borderTop: '3px solid var(--primary-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        <span style={{ fontSize: '1.25rem', fontWeight: '800', background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>ExTracker</span>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Loading your financial data...</p>
+      </div>
+    );
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -109,7 +118,7 @@ function App() {
         <button className="menu-toggle-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
           <Menu size={24} />
         </button>
-        <span className="mobile-title">FinanceTracker</span>
+        <span className="mobile-title">ExTracker</span>
         <div style={{ width: 24 }}></div>
       </header>
 
@@ -122,6 +131,7 @@ function App() {
         handleLogout={handleLogout} 
         isOpen={sidebarOpen}
         setIsOpen={setSidebarOpen}
+        user={user}
       />
       <div className="main-content">
         {renderContent()}

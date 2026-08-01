@@ -1,18 +1,14 @@
 import { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 const WeeklyAnalysis = ({ transactions, settings }) => {
   const [filterMode, setFilterMode] = useState('All');
   const [filterBank, setFilterBank] = useState('All');
   
-  // Basic weekly aggregation
   const getWeeksData = () => {
-    // For simplicity, we aggregate by ISO week in the current year, or just group by month chunks
-    // Let's create a rough weekly chunking based on date
     const weeks = {};
     
     transactions.forEach(t => {
-      // Exclude income and savings
       if (t.type === 'Income' || t.type === 'Saving' || t.type === 'income') return;
       if (filterMode !== 'All' && t.category !== filterMode) return;
       
@@ -20,7 +16,6 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
       if (filterBank !== 'All' && tBank.toLowerCase() !== filterBank.toLowerCase()) return;
       
       const date = new Date(t.date);
-      // Get week number
       const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
       const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
       const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
@@ -38,6 +33,13 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
   };
 
   const chartData = getWeeksData();
+  const weeklyLimit = settings.weeklyLimit || 10000;
+
+  const getBarColor = (spend, limit) => {
+    if (spend > limit) return '#ef4444'; // Over limit - Red
+    if (spend >= limit * 0.7) return '#f97316'; // Near limit - Orange
+    return '#22c55e'; // Safe - Green
+  };
 
   return (
     <div className="fade-in">
@@ -47,7 +49,7 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
       </header>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
-        <div className="form-row" style={{ display: 'flex', gap: '1.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <div className="form-row" style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.75rem', flexWrap: 'wrap' }}>
           <div className="form-group flex-1" style={{ minWidth: '200px' }}>
             <label>Filter by Category</label>
             <select value={filterMode} onChange={(e) => setFilterMode(e.target.value)}>
@@ -68,16 +70,33 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
           </div>
         </div>
 
-        <div style={{ width: '100%', height: 400 }}>
+        {/* Weekly Limit Summary Indicator */}
+        <div style={{ marginBottom: '1.5rem', padding: '0.75rem 1.25rem', backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Configured Weekly Cap: <strong style={{ color: 'var(--text-main)' }}>₹{weeklyLimit.toLocaleString()}</strong></span>
+          <div style={{ display: 'flex', gap: '1rem', fontSize: '0.8rem' }}>
+            <span style={{ color: '#22c55e', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e' }}></span> &lt;70% Cap</span>
+            <span style={{ color: '#f97316', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f97316' }}></span> 70-100% Cap</span>
+            <span style={{ color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444' }}></span> &gt;100% Cap</span>
+          </div>
+        </div>
+
+        <div style={{ width: '100%', height: 380 }}>
           <ResponsiveContainer>
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-              <XAxis dataKey="name" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
-              <Tooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} />
+              <YAxis stroke="var(--text-muted)" fontSize={12} />
+              <Tooltip 
+                cursor={{ fill: 'rgba(255,255,255,0.03)' }} 
+                contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-main)' }} 
+              />
               <Legend />
-              <ReferenceLine y={settings.weeklyLimit || 10000} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Weekly Limit', fill: '#ef4444' }} />
-              <Bar dataKey="spend" fill="#3b82f6" name="Spend" radius={[4, 4, 0, 0]} />
+              <ReferenceLine y={weeklyLimit} stroke="#ef4444" strokeDasharray="4 4" label={{ position: 'top', value: `Weekly Limit (₹${weeklyLimit})`, fill: '#ef4444', fontSize: 12 }} />
+              <Bar dataKey="spend" name="Weekly Spend" radius={[6, 6, 0, 0]}>
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry.spend, entry.limit)} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -89,26 +108,27 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Week Identifier</th>
+                <th>Week</th>
                 <th>Total Spend</th>
                 <th>Bank Breakdown</th>
                 <th>Limit</th>
-                <th>Ratio (%)</th>
+                <th>Cap Utilized</th>
               </tr>
             </thead>
             <tbody>
               {chartData.map((d, i) => {
                 const ratio = ((d.spend / d.limit) * 100).toFixed(1);
+                const isOver = d.spend > d.limit;
                 return (
                   <tr key={i}>
-                    <td>{d.name}</td>
-                    <td style={{ color: d.spend > d.limit ? '#ef4444' : '#10b981', fontWeight: 'bold' }}>₹{d.spend.toFixed(2)}</td>
+                    <td style={{ fontWeight: '600' }}>{d.name}</td>
+                    <td style={{ color: isOver ? '#ef4444' : '#22c55e', fontWeight: 'bold' }}>₹{d.spend.toFixed(2)}</td>
                     <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '250px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '260px' }}>
                         {Object.entries(d.bankBreakdown).map(([bankName, bankSpent]) => (
-                          <div key={bankName} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', gap: '0.5rem', backgroundColor: 'rgba(255,255,255,0.015)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                          <div key={bankName} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', gap: '0.5rem', backgroundColor: 'rgba(255,255,255,0.015)', padding: '3px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>
                             <span style={{ color: 'var(--text-muted)' }}>{bankName}:</span>
-                            <span style={{ color: 'var(--text-main)', fontWeight: 'bold' }}>₹{bankSpent.toFixed(2)}</span>
+                            <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>₹{bankSpent.toFixed(2)}</span>
                           </div>
                         ))}
                         {Object.keys(d.bankBreakdown).length === 0 && (
@@ -118,14 +138,14 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
                     </td>
                     <td>₹{d.limit}</td>
                     <td>
-                      <span className={`badge-type ${d.spend > d.limit ? 'want' : 'saving'}`}>
+                      <span className={`badge-type ${isOver ? 'want' : 'saving'}`}>
                         {ratio}%
                       </span>
                     </td>
                   </tr>
                 );
               })}
-              {chartData.length === 0 && <tr><td colSpan="5" className="no-data" style={{ padding: '2rem' }}>No data for selected filters.</td></tr>}
+              {chartData.length === 0 && <tr><td colSpan="5" className="no-data" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No data for selected filters.</td></tr>}
             </tbody>
           </table>
         </div>

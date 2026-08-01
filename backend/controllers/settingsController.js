@@ -2,12 +2,38 @@ const Settings = require('../models/Settings');
 const User = require('../models/User');
 const { generateAndSendReportForUser, generateAndSendMonthlyReportForUser } = require('../utils/cronJobs');
 
+const defaultCategories = [
+  { name: 'Bills & Utilities' },
+  { name: 'Entertainment' },
+  { name: 'Essentials' },
+  { name: 'Food & Dining' },
+  { name: 'Groceries' },
+  { name: 'Health' },
+  { name: 'Rent' },
+  { name: 'Shopping' },
+  { name: 'Transport' },
+  { name: 'Savings & Investments' }
+];
+
 exports.getSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne({ userId: req.user.id });
     if (!settings) {
       settings = new Settings({ userId: req.user.id });
       await settings.save();
+    } else {
+      // Check if user has old categories like 'Life Infrastructure' or 'Future Me'
+      const hasOld = settings.categories.some(c => 
+        c.name === 'Life Infrastructure' || 
+        c.name === 'Future Me' || 
+        c.name === 'Performance & Growth' || 
+        c.name === 'Relationships & Generosity' || 
+        c.name === 'Lifestyle Enjoyment'
+      );
+      if (hasOld) {
+        settings.categories = defaultCategories;
+        await settings.save();
+      }
     }
     res.json(settings);
   } catch (err) {

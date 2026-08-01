@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Trash2, Plus, Check } from 'lucide-react';
+import { Trash2, Plus, Check, Crown } from 'lucide-react';
 
 const ALL_SERVICES = ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer', 'Cash'];
 
@@ -8,18 +8,44 @@ const Setup = ({ settings, fetchSettings, user }) => {
   const [loadingReport, setLoadingReport] = useState(false);
   const [loadingMonthlyReport, setLoadingMonthlyReport] = useState(false);
   const [formData, setFormData] = useState({
-    salary: settings.salary || 50000,
-    weeklyLimit: settings.weeklyLimit || 10000,
-    needsPercentage: settings.needsPercentage || 50,
-    wantsPercentage: settings.wantsPercentage || 30,
-    savingsPercentage: settings.savingsPercentage || 20,
+    salary: settings.salary ?? 50000,
+    weeklyLimit: settings.weeklyLimit ?? 10000,
+    monthlyLimit: settings.monthlyLimit ?? 0,
+    needsPercentage: settings.needsPercentage ?? 50,
+    wantsPercentage: settings.wantsPercentage ?? 30,
+    savingsPercentage: settings.savingsPercentage ?? 20,
     banks: settings.banks || [
       { name: 'Cash / Wallet', services: ['Cash'] }
-    ]
+    ],
+    categories: settings.categories || [],
+    paymentModes: settings.paymentModes || ['Credit Card', 'Debit Card', 'UPI', 'Cash', 'Bank Transfer']
   });
 
+  useEffect(() => {
+    if (settings) {
+      setFormData(prev => ({
+        ...prev,
+        salary: settings.salary ?? prev.salary,
+        weeklyLimit: settings.weeklyLimit ?? prev.weeklyLimit,
+        monthlyLimit: settings.monthlyLimit ?? prev.monthlyLimit,
+        needsPercentage: settings.needsPercentage ?? prev.needsPercentage,
+        wantsPercentage: settings.wantsPercentage ?? prev.wantsPercentage,
+        savingsPercentage: settings.savingsPercentage ?? prev.savingsPercentage,
+        banks: settings.banks || prev.banks,
+        categories: settings.categories || prev.categories,
+        paymentModes: settings.paymentModes || prev.paymentModes
+      }));
+    }
+  }, [settings]);
+
   const [newBankName, setNewBankName] = useState('');
-  const [selectedServices, setSelectedServices] = useState(['UPI', 'Debit Card']);
+  const [selectedServices, setSelectedServices] = useState(
+    settings.paymentModes && settings.paymentModes.length >= 2 
+      ? [settings.paymentModes[0], settings.paymentModes[1]] 
+      : ['UPI', 'Debit Card']
+  );
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newPaymentMode, setNewPaymentMode] = useState('');
 
   const saveSettingsToBackend = async (newFormData) => {
     try {
@@ -178,9 +204,25 @@ const Setup = ({ settings, fetchSettings, user }) => {
                 required 
               />
             </div>
+            <div className="form-group flex-1">
+              <label>Monthly Spending Limit (₹)</label>
+              <input 
+                type="number" 
+                name="monthlyLimit"
+                value={formData.monthlyLimit} 
+                onChange={handleChange}
+                min="0"
+                placeholder="e.g. 25000"
+              />
+              {formData.monthlyLimit > 0 && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem', display: 'block' }}>
+                  ≈ ₹{Math.round(formData.monthlyLimit / 30).toLocaleString()} / day base limit
+                </span>
+              )}
+            </div>
           </div>
 
-          <h3 style={{ marginTop: '1rem', marginBottom: '1rem' }}>Budget Distribution (%)</h3>
+          <h3 className="setup-section-title">Budget Distribution (%)</h3>
           <div className="form-row">
             <div className="form-group flex-1">
               <label>Needs (%)</label>
@@ -213,8 +255,35 @@ const Setup = ({ settings, fetchSettings, user }) => {
               />
             </div>
           </div>
+
+          {/* Live Budget Distribution Visual Bar */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+              <span>Live Distribution Breakdown</span>
+              <span style={{ color: totalPercentage === 100 ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>
+                {totalPercentage}% Total {totalPercentage === 100 ? '(Balanced)' : '(Unbalanced)'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', height: '10px', borderRadius: '6px', overflow: 'hidden', backgroundColor: 'var(--border)' }}>
+              <div style={{ width: `${Math.max(0, formData.needsPercentage)}%`, backgroundColor: '#f59e0b', transition: 'width 0.3s' }} title={`Needs: ${formData.needsPercentage}%`}></div>
+              <div style={{ width: `${Math.max(0, formData.wantsPercentage)}%`, backgroundColor: '#ef4444', transition: 'width 0.3s' }} title={`Wants: ${formData.wantsPercentage}%`}></div>
+              <div style={{ width: `${Math.max(0, formData.savingsPercentage)}%`, backgroundColor: '#22c55e', transition: 'width 0.3s' }} title={`Savings: ${formData.savingsPercentage}%`}></div>
+            </div>
+            <div style={{ display: 'flex', gap: '1.25rem', marginTop: '0.5rem', fontSize: '0.75rem' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#f59e0b' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b' }}></span> Needs ({formData.needsPercentage}%)
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#ef4444' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444' }}></span> Wants ({formData.wantsPercentage}%)
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#22c55e' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e' }}></span> Savings ({formData.savingsPercentage}%)
+              </span>
+            </div>
+          </div>
+
           {totalPercentage !== 100 && (
-            <p className="helper-text" style={{ color: 'var(--danger)' }}>
+            <p className="helper-text" style={{ color: 'var(--danger)', marginBottom: '1rem' }}>
               Warning: Your percentages add up to {totalPercentage}%, not 100%.
             </p>
           )}
@@ -222,7 +291,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
           <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Save Settings</button>
         </form>
 
-        <h3 style={{ marginTop: '2rem', marginBottom: '1rem' }}>5 Year Salary & Target Projections (10% YoY)</h3>
+        <h3 className="setup-section-title" style={{ marginTop: '2.5rem' }}>5 Year Salary & Target Projections (10% YoY)</h3>
         <div className="table-responsive">
           <table className="data-table projection-table">
             <thead>
@@ -235,46 +304,193 @@ const Setup = ({ settings, fetchSettings, user }) => {
               </tr>
             </thead>
             <tbody>
-              {projections.map(p => (
-                <tr key={p.year}>
-                  <td style={{fontWeight: 'bold'}}>{p.year}</td>
-                  <td style={{color: '#8b5cf6'}}>₹{p.salary.toLocaleString()}</td>
-                  <td>₹{p.needs.toLocaleString()}</td>
-                  <td>₹{p.wants.toLocaleString()}</td>
-                  <td>₹{p.savings.toLocaleString()}</td>
-                </tr>
-              ))}
+              {projections.map(p => {
+                const isCurrent = p.year === currentYear;
+                return (
+                  <tr key={p.year} style={isCurrent ? { backgroundColor: 'rgba(249, 115, 22, 0.08)', borderLeft: '3px solid var(--primary-color)' } : {}}>
+                    <td style={{ fontWeight: 'bold' }}>
+                      {p.year} {isCurrent && <span style={{ fontSize: '0.7rem', padding: '1px 5px', borderRadius: '4px', backgroundColor: 'var(--primary-color)', color: '#000000', marginLeft: '0.3rem', fontWeight: 'bold' }}>Current</span>}
+                    </td>
+                    <td style={{ color: '#8b5cf6', fontWeight: 'bold' }}>₹{p.salary.toLocaleString()}</td>
+                    <td>₹{p.needs.toLocaleString()}</td>
+                    <td>₹{p.wants.toLocaleString()}</td>
+                    <td style={{ color: '#22c55e', fontWeight: 'bold' }}>₹{p.savings.toLocaleString()}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
       <div className="card setup-card">
-        <h3>Category List & Mapping</h3>
-        <div className="table-responsive">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Category Name</th>
-                <th>Type</th>
-                <th>Default Payment Mode</th>
-              </tr>
-            </thead>
-            <tbody>
-              {settings.categories.map((c, i) => (
-                <tr key={i}>
-                  <td>{c.name}</td>
-                  <td><span className={`badge-type ${c.type.toLowerCase()}`}>{c.type}</span></td>
-                  <td>{c.paymentMode}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <h3 className="setup-section-title">Category Management</h3>
+        <p className="helper-text" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          Define the custom transaction categories you use to classify your spending.
+        </p>
+
+        {/* Existing Categories List */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          {formData.categories.map((c, i) => (
+            <div 
+              key={i} 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem', 
+                padding: '6px 12px', 
+                backgroundColor: 'rgba(255,255,255,0.04)', 
+                border: '1px solid var(--border)', 
+                borderRadius: '20px',
+                fontSize: '0.85rem' 
+              }}
+            >
+              <span>{c.name}</span>
+              {formData.categories.length > 1 && (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    const updatedCats = formData.categories.filter((_, idx) => idx !== i);
+                    const newFormData = { ...formData, categories: updatedCats };
+                    setFormData(newFormData);
+                    saveSettingsToBackend(newFormData);
+                  }}
+                  style={{ 
+                    background: 'transparent', 
+                    border: 'none', 
+                    color: 'var(--danger)', 
+                    cursor: 'pointer', 
+                    padding: 0, 
+                    display: 'flex', 
+                    alignItems: 'center' 
+                  }}
+                  title="Delete Category"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+          ))}
         </div>
+
+        {/* Add Category Form */}
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!newCategoryName.trim()) return;
+            if (formData.categories.some(c => c.name.toLowerCase() === newCategoryName.trim().toLowerCase())) {
+              alert('Category already exists!');
+              return;
+            }
+            const newCats = [...formData.categories, { name: newCategoryName.trim() }];
+            const newFormData = { ...formData, categories: newCats };
+            setFormData(newFormData);
+            saveSettingsToBackend(newFormData);
+            setNewCategoryName('');
+          }}
+          style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', maxWidth: '500px' }}
+        >
+          <div className="form-group flex-1" style={{ marginBottom: 0 }}>
+            <label>Add New Category</label>
+            <input 
+              type="text" 
+              placeholder="e.g. Subscriptions, Gifts" 
+              value={newCategoryName} 
+              onChange={(e) => setNewCategoryName(e.target.value)} 
+            />
+          </div>
+          <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0.75rem 1.5rem' }}>
+            Add
+          </button>
+        </form>
       </div>
 
       <div className="card setup-card" style={{ marginTop: '2rem' }}>
-        <h3>Bank Accounts & Payment Services Customization</h3>
+        <h3 className="setup-section-title">Payment Modes Management</h3>
+        <p className="helper-text" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          Configure the active payment methods available across your bank accounts (e.g. UPI, Credit Card, Cash, etc).
+        </p>
+
+        {/* Existing Payment Modes List */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          {formData.paymentModes.map((pm, i) => (
+            <div 
+              key={i} 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem', 
+                padding: '6px 12px', 
+                backgroundColor: 'rgba(59, 130, 246, 0.08)', 
+                border: '1px solid rgba(59, 130, 246, 0.2)', 
+                borderRadius: '20px',
+                color: '#3b82f6',
+                fontSize: '0.85rem',
+                fontWeight: '600'
+              }}
+            >
+              <span>{pm}</span>
+              {formData.paymentModes.length > 1 && (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    const updatedPMs = formData.paymentModes.filter((_, idx) => idx !== i);
+                    const newFormData = { ...formData, paymentModes: updatedPMs };
+                    setFormData(newFormData);
+                    saveSettingsToBackend(newFormData);
+                  }}
+                  style={{ 
+                    background: 'transparent', 
+                    border: 'none', 
+                    color: 'var(--danger)', 
+                    cursor: 'pointer', 
+                    padding: 0, 
+                    display: 'flex', 
+                    alignItems: 'center' 
+                  }}
+                  title="Delete Payment Mode"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Add Payment Mode Form */}
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!newPaymentMode.trim()) return;
+            if (formData.paymentModes.some(pm => pm.toLowerCase() === newPaymentMode.trim().toLowerCase())) {
+              alert('Payment Mode already exists!');
+              return;
+            }
+            const newPMs = [...formData.paymentModes, newPaymentMode.trim()];
+            const newFormData = { ...formData, paymentModes: newPMs };
+            setFormData(newFormData);
+            saveSettingsToBackend(newFormData);
+            setNewPaymentMode('');
+          }}
+          style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', maxWidth: '500px' }}
+        >
+          <div className="form-group flex-1" style={{ marginBottom: 0 }}>
+            <label>Add New Payment Mode</label>
+            <input 
+              type="text" 
+              placeholder="e.g. GPay, Apple Pay" 
+              value={newPaymentMode} 
+              onChange={(e) => setNewPaymentMode(e.target.value)} 
+            />
+          </div>
+          <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0.75rem 1.5rem' }}>
+            Add
+          </button>
+        </form>
+      </div>
+
+      <div className="card setup-card" style={{ marginTop: '2rem' }}>
+        <h3 className="setup-section-title">Bank Accounts & Payment Services Customization</h3>
         <p className="helper-text" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
           Configure your personal bank accounts and define exactly which transaction services (UPI, Cards, Cash) each bank supports. These mappings automatically filter options dynamically when logging your expenses.
         </p>
@@ -288,6 +504,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
                 padding: '1.5rem', 
                 backgroundColor: 'rgba(255, 255, 255, 0.02)', 
                 border: '1px solid var(--border)', 
+                borderTop: '2px solid var(--primary-color)',
                 borderRadius: '12px', 
                 display: 'flex', 
                 flexDirection: 'column', 
@@ -322,9 +539,8 @@ const Setup = ({ settings, fetchSettings, user }) => {
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.8rem 0' }}>
                   Toggle supported services below:
                 </p>
-
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {ALL_SERVICES.map(service => {
+                  {formData.paymentModes.map(service => {
                     const isActive = bank.services.includes(service);
                     return (
                       <span
@@ -370,7 +586,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
             <div className="form-group">
               <label style={{ marginBottom: '0.5rem', display: 'block' }}>Initial Supported Services:</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                {ALL_SERVICES.map(service => {
+                {formData.paymentModes.map(service => {
                   const isChecked = selectedServices.includes(service);
                   return (
                     <button
@@ -413,7 +629,9 @@ const Setup = ({ settings, fetchSettings, user }) => {
 
       {user?.isPremium && (
         <div className="card setup-card" style={{ marginTop: '2rem' }}>
-          <h3>Financial Diagnostics & Reports</h3>
+          <h3 className="setup-section-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Crown size={20} color="#f59e0b" /> Financial Diagnostics & Reports
+          </h3>
           <p className="helper-text" style={{ marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: '1.5' }}>
             Generate comprehensive audit reports of your credited and debited transactions, starting/ending balances, and category-wise spending distributions. Beautifully formatted PDFs will be compiled and sent directly to your registered email address.
           </p>

@@ -1,13 +1,13 @@
-import { LayoutDashboard, Receipt, BarChart3, PieChart, CalendarDays, Settings, LogOut, Banknote, X } from 'lucide-react';
+import { LayoutDashboard, Receipt, BarChart3, PieChart, CalendarDays, Settings, LogOut, Banknote, X, FileBarChart } from 'lucide-react';
 
-const Sidebar = ({ activeTab, setActiveTab, handleLogout, isOpen, setIsOpen }) => {
+const Sidebar = ({ activeTab, setActiveTab, handleLogout, isOpen, setIsOpen, user }) => {
   return (
     <>
       {isOpen && <div className="sidebar-backdrop" onClick={() => setIsOpen(false)}></div>}
       
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <h1>FinanceTracker</h1>
+          <h1>ExTracker</h1>
           <button className="sidebar-close-btn" onClick={() => setIsOpen(false)} aria-label="Close menu">
             <X size={20} />
           </button>
@@ -38,7 +38,7 @@ const Sidebar = ({ activeTab, setActiveTab, handleLogout, isOpen, setIsOpen }) =
           <span>Yearly Calendar</span>
         </button>
         <button className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>
-          <PieChart size={20} />
+          <FileBarChart size={20} />
           <span>Reports & Diagnostics</span>
         </button>
         <button className={`nav-item ${activeTab === 'setup' ? 'active' : ''}`} onClick={() => setActiveTab('setup')}>
@@ -47,6 +47,12 @@ const Sidebar = ({ activeTab, setActiveTab, handleLogout, isOpen, setIsOpen }) =
         </button>
 
         <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+          {user?.email && (
+            <div style={{ padding: '0.6rem 0.85rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', marginBottom: '0.75rem', border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Signed in as</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+            </div>
+          )}
           <button className="nav-item" onClick={handleLogout} style={{ color: 'var(--danger)' }}>
             <LogOut size={20} />
             <span>Logout</span>

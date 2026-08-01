@@ -43,6 +43,8 @@ const Dashboard = ({ transactions, settings }) => {
   }
   score = Math.min(100, Math.round(score));
 
+  const scoreColor = score >= 70 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
+
   return (
     <div className="fade-in">
       <header className="page-header">
@@ -50,74 +52,114 @@ const Dashboard = ({ transactions, settings }) => {
         <p>Your overarching Budget vs Actual overview</p>
       </header>
 
-      <div className="account-overview" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '1.5rem' }}>
-          <Wallet color="#10b981" size={28} style={{ marginBottom: '0.75rem' }} />
-          <h3 style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Credited This Month</h3>
-          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>₹{totalCreditedThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+      {/* Top 4 Stat Cards */}
+      <div className="account-overview" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+        <div className="stat-card">
+          <div>
+            <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(34, 197, 94, 0.12)', color: '#22c55e' }}>
+              <Wallet size={22} />
+            </div>
+            <div className="stat-value" style={{ color: '#22c55e' }}>
+              ₹{totalCreditedThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="stat-label">Credited This Month</div>
+          </div>
         </div>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '1.5rem' }}>
-          <TrendingDown color="#ef4444" size={28} style={{ marginBottom: '0.75rem' }} />
-          <h3 style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Spent This Month</h3>
-          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>₹{totalSpentThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+
+        <div className="stat-card">
+          <div>
+            <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(239, 68, 68, 0.12)', color: '#ef4444' }}>
+              <TrendingDown size={22} />
+            </div>
+            <div className="stat-value" style={{ color: '#ef4444' }}>
+              ₹{totalSpentThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="stat-label">Spent This Month</div>
+          </div>
         </div>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '1.5rem' }}>
-          <PieChart color="#3b82f6" size={28} style={{ marginBottom: '0.75rem' }} />
-          <h3 style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Left This Month</h3>
-          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>₹{totalLeftThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span style={{fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 'normal'}}>({percentLeftThisMonth}%)</span></p>
+
+        <div className="stat-card">
+          <div>
+            <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6' }}>
+              <PieChart size={22} />
+            </div>
+            <div className="stat-value" style={{ color: '#3b82f6' }}>
+              ₹{totalLeftThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="stat-label">
+              Left This Month <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({percentLeftThisMonth}%)</span>
+            </div>
+          </div>
         </div>
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '1.5rem' }}>
-          <Landmark color="#8b5cf6" size={28} style={{ marginBottom: '0.75rem' }} />
-          <h3 style={{ fontSize: '0.95rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Total Overall Balance</h3>
-          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#8b5cf6' }}>₹{overallLeft.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+
+        <div className="stat-card">
+          <div>
+            <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(139, 92, 246, 0.12)', color: '#8b5cf6' }}>
+              <Landmark size={22} />
+            </div>
+            <div className="stat-value" style={{ color: '#8b5cf6' }}>
+              ₹{overallLeft.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="stat-label">Total Overall Balance</div>
+          </div>
         </div>
       </div>
 
       <div className="top-metrics">
+        {/* Score Card with dynamic conic-gradient ring */}
         <div className="score-card">
           <div className="score-header">
-            <Activity size={24} color="#8b5cf6" />
-            <h2>Financial Score</h2>
+            <Activity size={24} color={scoreColor} />
+            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Financial Score</h2>
           </div>
-          <div className="score-circle">
-            <div className="score-value">{score}</div>
-            <div className="score-label">/ 100</div>
+          <div 
+            className="score-circle" 
+            style={{ 
+              background: `conic-gradient(${scoreColor} 0% ${score}%, var(--border) ${score}% 100%)`,
+              padding: '8px'
+            }}
+          >
+            <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: 'var(--card-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="score-value" style={{ color: scoreColor }}>{score}</div>
+              <div className="score-label" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>/ 100</div>
+            </div>
           </div>
         </div>
 
+        {/* Budget vs Actual Variance Card */}
         <div className="budget-variance-card">
-          <div className="budget-header">
+          <div className="budget-header" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
             <Target size={24} color="#3b82f6" />
-            <h2>Budget vs Actual ({settings.needsPercentage || 50}:{settings.wantsPercentage || 30}:{settings.savingsPercentage || 20})</h2>
+            <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Budget vs Actual ({settings.needsPercentage || 50}:{settings.wantsPercentage || 30}:{settings.savingsPercentage || 20})</h2>
           </div>
           
           <div className="variance-item">
             <div className="v-labels">
               <span className="v-title">Needs ({settings.needsPercentage || 50}%)</span>
-              <span className="v-amounts">₹{actualNeed} / ₹{budgetNeed}</span>
+              <span className="v-amounts" style={{ fontWeight: '600' }}>₹{actualNeed.toLocaleString()} / ₹{budgetNeed.toLocaleString()}</span>
             </div>
             <div className="budget-progress">
-              <div className={`progress-bar ${actualNeed > budgetNeed ? 'danger' : ''}`} style={{ width: `${Math.min(100, (actualNeed / budgetNeed || 0) * 100)}%` }}></div>
+              <div className={`progress-bar ${actualNeed > budgetNeed ? 'danger' : ''}`} style={{ width: `${Math.min(100, (actualNeed / (budgetNeed || 1)) * 100)}%` }}></div>
             </div>
           </div>
 
           <div className="variance-item">
             <div className="v-labels">
               <span className="v-title">Wants ({settings.wantsPercentage || 30}%)</span>
-              <span className="v-amounts">₹{actualWant} / ₹{budgetWant}</span>
+              <span className="v-amounts" style={{ fontWeight: '600' }}>₹{actualWant.toLocaleString()} / ₹{budgetWant.toLocaleString()}</span>
             </div>
             <div className="budget-progress">
-              <div className={`progress-bar ${actualWant > budgetWant ? 'danger' : 'warning'}`} style={{ width: `${Math.min(100, (actualWant / budgetWant || 0) * 100)}%`, backgroundColor: actualWant > budgetWant ? '' : '#f59e0b' }}></div>
+              <div className={`progress-bar ${actualWant > budgetWant ? 'danger' : 'warning'}`} style={{ width: `${Math.min(100, (actualWant / (budgetWant || 1)) * 100)}%`, backgroundColor: actualWant > budgetWant ? '' : '#f59e0b' }}></div>
             </div>
           </div>
 
-          <div className="variance-item">
+          <div className="variance-item" style={{ marginBottom: 0 }}>
             <div className="v-labels">
               <span className="v-title">Savings ({settings.savingsPercentage || 20}%)</span>
-              <span className="v-amounts">₹{actualSaving} / ₹{budgetSaving}</span>
+              <span className="v-amounts" style={{ fontWeight: '600' }}>₹{actualSaving.toLocaleString()} / ₹{budgetSaving.toLocaleString()}</span>
             </div>
             <div className="budget-progress">
-              <div className="progress-bar success" style={{ width: `${Math.min(100, (actualSaving / budgetSaving || 0) * 100)}%`, backgroundColor: '#10b981' }}></div>
+              <div className="progress-bar success" style={{ width: `${Math.min(100, (actualSaving / (budgetSaving || 1)) * 100)}%`, backgroundColor: '#10b981' }}></div>
             </div>
           </div>
         </div>
@@ -154,49 +196,55 @@ const Dashboard = ({ transactions, settings }) => {
 
         return (
           <div className="card" style={{ marginTop: '2rem' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', color: 'var(--text-main)' }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-main)' }}>
               <Landmark color="var(--primary-color)" size={20} /> Bank Account & Wallet Balances
             </h3>
             <p className="helper-text" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-              Real-time balance aggregations computed directly across all transaction history categories logged for each bank profile.
+              Real-time balance aggregations computed directly across all transaction history logged per bank profile.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-              {bankList.map((b, idx) => (
-                <div 
-                  key={idx} 
-                  style={{ 
-                    padding: '1.5rem', 
-                    backgroundColor: 'rgba(255, 255, 255, 0.015)', 
-                    border: '1px solid var(--border)', 
-                    borderRadius: '12px',
-                    transition: 'transform 0.2s',
-                    cursor: 'default'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.1rem' }}>{b.name}</h4>
-                    <span style={{ fontSize: '0.75rem', padding: '3px 8px', borderRadius: '4px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary-color)', fontWeight: 'bold' }}>Linked</span>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Credited (Inflow):</span>
-                      <span style={{ color: '#22c55e', fontWeight: 'bold' }}>+₹{b.credited.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              {bankList.map((b, idx) => {
+                const isPositive = b.balance >= 0;
+                return (
+                  <div 
+                    key={idx} 
+                    style={{ 
+                      padding: '1.5rem', 
+                      backgroundColor: 'rgba(255, 255, 255, 0.015)', 
+                      border: '1px solid var(--border)', 
+                      borderTop: `3px solid ${isPositive ? '#22c55e' : '#ef4444'}`,
+                      borderRadius: '12px',
+                      transition: 'transform 0.2s',
+                      cursor: 'default'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.05rem' }}>{b.name}</h4>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', padding: '3px 8px', borderRadius: '100px', backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', fontWeight: 'bold' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }}></span> Linked
+                      </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                      <span style={{ color: 'var(--text-muted)' }}>Spent (Outflow):</span>
-                      <span style={{ color: '#ef4444', fontWeight: 'bold' }}>-₹{b.spent.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Credited (Inflow):</span>
+                        <span style={{ color: '#22c55e', fontWeight: 'bold' }}>+₹{b.credited.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                        <span style={{ color: 'var(--text-muted)' }}>Spent (Outflow):</span>
+                        <span style={{ color: '#ef4444', fontWeight: 'bold' }}>-₹{b.spent.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 'bold' }}>Net Balance:</span>
+                      <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: isPositive ? '#22c55e' : '#ef4444' }}>
+                        ₹{b.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
                     </div>
                   </div>
-                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 'bold' }}>Net Balance:</span>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: b.balance >= 0 ? '#10b981' : '#ef4444' }}>
-                      ₹{b.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
