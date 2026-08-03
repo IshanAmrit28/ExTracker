@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import { authApi } from '../../services/api';
 
 const Auth = ({ setToken, setUser }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,15 +10,12 @@ const Auth = ({ setToken, setUser }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
     try {
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-      const res = await axios.post(`${API_BASE_URL}${endpoint}`, { email, password });
+      const request = isLogin ? authApi.login : authApi.register;
+      const res = await request({ email, password });
       
       const userData = { email: res.data.email, isPremium: res.data.isPremium };
       if (typeof setUser === 'function') setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      
       setToken(res.data.token);
     } catch (err) {
       setError(err.response?.data?.message || 'Authentication failed');

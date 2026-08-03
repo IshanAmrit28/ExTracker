@@ -1,17 +1,9 @@
 import { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getLocalMonthString } from '../utils/dateUtils';
+import { formatMonthLabel, getCurrentMonthKey, getMonthKey } from '../../../utils/finance/dates';
+import { getExpenseShare, isExpense } from '../../../utils/finance/transactions';
 
 const COLORS = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f59e0b', '#06b6d4'];
-
-const formatMonthLabel = (key) => {
-  if (!key) return '';
-  const [y, m] = key.split('-');
-  const d = new Date(Number(y), Number(m) - 1, 1);
-  return d.toLocaleString('default', { month: 'long', year: 'numeric' });
-};
-
-const getCurrentMonthKey = () => getLocalMonthString();
 
 const MonthlyAnalysis = ({ transactions, settings }) => {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey());
@@ -19,11 +11,7 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
 
   // Available unique months from transaction history
   const availableMonths = useMemo(() => {
-    const keys = new Set(transactions.map(t => {
-      const d = new Date(t.date);
-      if (isNaN(d.getTime())) return '';
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    }).filter(Boolean));
+    const keys = new Set(transactions.map(t => getMonthKey(t.date)).filter(Boolean));
 
     const sorted = Array.from(keys).sort((a, b) => b.localeCompare(a));
     const cur = getCurrentMonthKey();
@@ -33,10 +21,7 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
 
   const { pieData, dailyData, totalSpent } = useMemo(() => {
     let tx = transactions.filter(t => {
-      const d = new Date(t.date);
-      if (isNaN(d.getTime())) return false;
-      const mk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      return mk === selectedMonth;
+      return getMonthKey(t.date) === selectedMonth;
     });
     
     if (filterBank !== 'All') {
@@ -49,9 +34,10 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
     // Pie Data (excluding savings & income)
     const expensesByCategory = {};
     let total = 0;
-    tx.filter(t => ['Need', 'Want', 'expense'].includes(t.type)).forEach(t => {
-      expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
-      total += t.amount;
+    tx.filter(isExpense).forEach(t => {
+      const expAmt = getExpenseShare(t);
+      expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + expAmt;
+      total += expAmt;
     });
 
     const pie = Object.keys(expensesByCategory).map(key => ({
@@ -69,10 +55,11 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
       dailyMap[dateStr] = 0;
     }
 
-    tx.filter(t => ['Need', 'Want', 'expense'].includes(t.type)).forEach(t => {
+    tx.filter(isExpense).forEach(t => {
       const dateStr = t.date.split('T')[0];
       if (dailyMap[dateStr] !== undefined) {
-        dailyMap[dateStr] += t.amount;
+        const expAmt = getExpenseShare(t);
+        dailyMap[dateStr] += expAmt;
       }
     });
 
@@ -156,9 +143,11 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip position={{ x: 12, y: 12 }}
                     formatter={(value) => `₹${value.toFixed(2)}`} 
-                    contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', color: '#ffffff' }} 
+                    contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px' }}
+                    labelStyle={{ color: 'var(--text-main)' }}
+                    itemStyle={{ color: 'var(--text-main)' }}
                   />
                   <Legend layout="horizontal" verticalAlign="bottom" align="center" />
                 </PieChart>

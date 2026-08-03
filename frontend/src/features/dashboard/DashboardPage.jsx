@@ -1,22 +1,33 @@
-import { Activity, Target, Wallet, TrendingDown, Landmark, PieChart } from 'lucide-react';
-import { getLocalMonthString } from '../utils/dateUtils';
+import { Activity, Target, Wallet, TrendingDown, Landmark, PieChart, Receipt } from 'lucide-react';
+import { getCurrentMonthKey, getMonthKey } from '../../utils/finance/dates';
+import { getExpenseShare, isExpense, isIncome } from '../../utils/finance/transactions';
 
 const Dashboard = ({ transactions, settings }) => {
-  const currentMonth = getLocalMonthString();
-  const thisMonthTx = transactions.filter(t => t.date.startsWith(currentMonth));
-  
-  const actualNeed = thisMonthTx.filter(t => t.type === 'Need' || t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
-  const actualWant = thisMonthTx.filter(t => t.type === 'Want').reduce((acc, curr) => acc + curr.amount, 0);
-  const actualSaving = thisMonthTx.filter(t => t.type === 'Saving').reduce((acc, curr) => acc + curr.amount, 0);
+  const currentMonth = getCurrentMonthKey();
+  const thisMonthTx = transactions.filter(t => getMonthKey(t.date) === currentMonth);
 
-  const totalCreditedThisMonth = thisMonthTx.filter(t => t.type === 'Income').reduce((acc, curr) => acc + curr.amount, 0);
+  const actualNeed = thisMonthTx.filter(t => t.type === 'Need' || t.type === 'expense').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
+  const actualWant = thisMonthTx.filter(t => t.type === 'Want').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
+  const actualSaving = thisMonthTx.filter(t => t.type === 'Saving').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
+
+  const totalCreditedThisMonth = thisMonthTx.filter(isIncome).reduce((acc, curr) => acc + curr.amount, 0);
   const totalSpentThisMonth = actualNeed + actualWant;
-  const totalLeftThisMonth = totalCreditedThisMonth - totalSpentThisMonth;
-  const percentLeftThisMonth = totalCreditedThisMonth > 0 ? Math.round((totalLeftThisMonth / totalCreditedThisMonth) * 100) : 0;
+  const monthlyBudget = Number(settings.monthlyLimit) || 0;
+  const budgetLeftThisMonth = monthlyBudget > 0
+    ? monthlyBudget - totalSpentThisMonth
+    : 0;
+  const percentBudgetLeft = monthlyBudget > 0
+    ? Math.round((budgetLeftThisMonth / monthlyBudget) * 100)
+    : 0;
 
-  const totalAllTimeCredited = transactions.filter(t => t.type === 'Income').reduce((acc, curr) => acc + curr.amount, 0);
-  const totalAllTimeSpent = transactions.filter(t => ['Need', 'Want', 'expense'].includes(t.type)).reduce((acc, curr) => acc + curr.amount, 0);
+  const totalAllTimeCredited = transactions.filter(isIncome).reduce((acc, curr) => acc + curr.amount, 0);
+  const totalAllTimeSpent = transactions.filter(isExpense).reduce((acc, curr) => acc + getExpenseShare(curr), 0);
   const overallLeft = totalAllTimeCredited - totalAllTimeSpent;
+
+  // Outstanding Reimbursements total across all pending/partial split transactions
+  const totalOutstandingReimbursements = transactions
+    .filter(t => t.isSplit && t.reimbursementStatus !== 'Completed')
+    .reduce((acc, curr) => acc + Math.max(0, (curr.recoverableAmount || 0) - (curr.reimbursedAmount || 0)), 0);
 
   const salary = totalCreditedThisMonth > 0 ? totalCreditedThisMonth : (settings.salary || 0);
   
@@ -52,8 +63,8 @@ const Dashboard = ({ transactions, settings }) => {
         <p>Your overarching Budget vs Actual overview</p>
       </header>
 
-      {/* Top 4 Stat Cards */}
-      <div className="account-overview" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+      {/* Top Stat Cards */}
+      <div className="account-overview" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
         <div className="stat-card">
           <div>
             <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(34, 197, 94, 0.12)', color: '#22c55e' }}>
@@ -83,11 +94,11 @@ const Dashboard = ({ transactions, settings }) => {
             <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6' }}>
               <PieChart size={22} />
             </div>
-            <div className="stat-value" style={{ color: '#3b82f6' }}>
-              ₹{totalLeftThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div className="stat-value" style={{ color: budgetLeftThisMonth < 0 ? '#ef4444' : '#3b82f6' }}>
+              ₹{budgetLeftThisMonth.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="stat-label">
-              Left This Month <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({percentLeftThisMonth}%)</span>
+              Budget Left to Spend <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({percentBudgetLeft}%)</span>
             </div>
           </div>
         </div>
@@ -101,6 +112,18 @@ const Dashboard = ({ transactions, settings }) => {
               ₹{overallLeft.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="stat-label">Total Overall Balance</div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div>
+            <div className="stat-icon-wrapper" style={{ backgroundColor: 'rgba(249, 115, 22, 0.12)', color: '#f97316' }}>
+              <Receipt size={22} />
+            </div>
+            <div className="stat-value" style={{ color: '#f97316' }}>
+              ₹{totalOutstandingReimbursements.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="stat-label">Outstanding Reimbursements</div>
           </div>
         </div>
       </div>
@@ -180,7 +203,7 @@ const Dashboard = ({ transactions, settings }) => {
             bankBalances[tBank] = { name: tBank, credited: 0, spent: 0, balance: 0 };
           }
           
-          if (t.type === 'Income') {
+          if (t.type === 'Income' || t.type === 'Reimbursement') {
             bankBalances[tBank].credited += t.amount;
             bankBalances[tBank].balance += t.amount;
           } else if (['Need', 'Want', 'expense'].includes(t.type)) {

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { getExpenseShare, isExpense } from '../../../utils/finance/transactions';
 
 const WeeklyAnalysis = ({ transactions, settings }) => {
   const [filterMode, setFilterMode] = useState('All');
@@ -9,7 +10,7 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
     const weeks = {};
     
     transactions.forEach(t => {
-      if (t.type === 'Income' || t.type === 'Saving' || t.type === 'income') return;
+      if (!isExpense(t)) return;
       if (filterMode !== 'All' && t.category !== filterMode) return;
       
       const tBank = t.bank || '';
@@ -22,11 +23,12 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
       
       const key = `Week ${weekNum} (${date.toLocaleString('default', { month: 'short' })})`;
       
+      const expAmt = getExpenseShare(t);
       if (!weeks[key]) {
         weeks[key] = { name: key, spend: 0, limit: settings.weeklyLimit || 10000, bankBreakdown: {} };
       }
-      weeks[key].spend += t.amount;
-      weeks[key].bankBreakdown[tBank] = (weeks[key].bankBreakdown[tBank] || 0) + t.amount;
+      weeks[key].spend += expAmt;
+      weeks[key].bankBreakdown[tBank] = (weeks[key].bankBreakdown[tBank] || 0) + expAmt;
     });
 
     return Object.values(weeks).sort((a, b) => a.name.localeCompare(b.name));
@@ -88,7 +90,9 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
               <YAxis stroke="var(--text-muted)" fontSize={12} />
               <Tooltip 
                 cursor={{ fill: 'rgba(255,255,255,0.03)' }} 
-                contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text-main)' }} 
+                contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: '8px' }}
+                labelStyle={{ color: 'var(--text-main)' }}
+                itemStyle={{ color: 'var(--text-main)' }}
               />
               <Legend />
               <ReferenceLine y={weeklyLimit} stroke="#ef4444" strokeDasharray="4 4" label={{ position: 'top', value: `Weekly Limit (₹${weeklyLimit})`, fill: '#ef4444', fontSize: 12 }} />

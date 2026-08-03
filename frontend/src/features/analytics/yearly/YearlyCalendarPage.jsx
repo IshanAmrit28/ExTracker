@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
-import { formatDateToYYYYMMDD } from '../utils/dateUtils';
+import { formatDateToYYYYMMDD } from '../../../utils/dateUtils';
+import { getDateKey } from '../../../utils/finance/dates';
+import { getExpenseShare, isExpense } from '../../../utils/finance/transactions';
 
 const YearlyCalendar = ({ transactions }) => {
   const currentYear = new Date().getFullYear();
@@ -15,10 +17,10 @@ const YearlyCalendar = ({ transactions }) => {
     }
 
     transactions.forEach(t => {
-      if (['Need', 'Want', 'expense'].includes(t.type)) {
-        const dateStr = t.date.split('T')[0];
+      if (isExpense(t)) {
+        const dateStr = getDateKey(t.date);
         if (data[dateStr] !== undefined) {
-          data[dateStr] += t.amount;
+          data[dateStr] += getExpenseShare(t);
         }
       }
     });

@@ -1,119 +1,34 @@
-import { useState, useMemo } from 'react';
-import axios from 'axios';
-import { Trash2 } from 'lucide-react';
-import { getLocalDateString, formatDateDisplay } from '../utils/dateUtils';
-
-// Returns YYYY-MM key for a date string
-const getMonthKey = (dateStr) => {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return '';
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-};
-
-// Formats a YYYY-MM key to a label like "August 2026"
-const formatMonthLabel = (key) => {
-  if (!key) return '';
-  const [y, m] = key.split('-');
-  return new Date(Number(y), Number(m) - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
-};
-
-// Returns today's YYYY-MM
-const getCurrentMonthKey = () => {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-};
+import { useIncomeTracker } from './useIncomeTracker';
+import { Trash2, ArrowDownCircle, RotateCcw } from 'lucide-react';
+import { formatDateDisplay } from '../../utils/dateUtils';
+import DateInput from '../../components/DateInput';
 
 const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
-  const [filterBank, setFilterBank] = useState('All');
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey());
+  const {
+    filterBank,
+    setFilterBank,
+    selectedMonth,
+    setSelectedMonth,
+    formData,
+    setFormData,
+    handleChange,
+    handleSubmit,
+    handleDelete,
+    availableMonths,
+    allFiltered,
+    totalInflow,
+    totalReimbursed,
+    currentMonthKey,
+    formatMonthLabel,
+  } = useIncomeTracker({ transactions, settings, fetchTransactions });
 
-  const [formData, setFormData] = useState({
-    description: '',
-    amount: '',
-    category: 'Income',
-    type: 'Income',
-    bank: settings?.banks?.[0]?.name || '',
-    paymentMode: settings?.banks?.[0]?.services?.[0] || '',
-    date: getLocalDateString()
-  });
+  // Reimbursement entries — shown separately, NOT counted in income
 
-  const handleBankChange = (bankName) => {
-    const bankObj = settings?.banks?.find(b => b.name === bankName);
-    if (bankObj) {
-      const currentPM = formData.paymentMode;
-      const supportsCurrentPM = bankObj.services.includes(currentPM);
-      const newPM = supportsCurrentPM ? currentPM : (bankObj.services[0] || '');
-      setFormData(prev => ({ ...prev, bank: bankName, paymentMode: newPM }));
-    } else {
-      setFormData(prev => ({ ...prev, bank: bankName }));
-    }
-  };
 
-  const handleChange = (e) => {
-    if (e.target.name === 'bank') {
-      handleBankChange(e.target.value);
-    } else {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
-    }
-  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-      await axios.post(`${API_BASE_URL}/api/transactions`, formData);
-      fetchTransactions();
-      const defaultBank = settings?.banks?.[0];
-      setFormData({
-        description: '',
-        amount: '',
-        category: 'Income',
-        type: 'Income',
-        bank: defaultBank?.name || '',
-        paymentMode: defaultBank?.services?.[0] || '',
-        date: formData.date
-      });
-      alert('Income added!');
-    } catch (err) {
-      console.error('Error adding income:', err);
-    }
-  };
 
-  const handleDelete = async (id) => {
-    try {
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-      await axios.delete(`${API_BASE_URL}/api/transactions/${id}`);
-      fetchTransactions();
-    } catch (err) {
-      console.error('Error deleting income:', err);
-    }
-  };
 
-  // All income transactions
-  const incomeTransactions = transactions.filter(t => t.type === 'Income');
 
-  // Available months derived from income entries
-  const availableMonths = useMemo(() => {
-    const keys = new Set(incomeTransactions.map(t => getMonthKey(t.date)).filter(Boolean));
-    const sorted = Array.from(keys).sort((a, b) => b.localeCompare(a));
-    const cur = getCurrentMonthKey();
-    if (!keys.has(cur)) sorted.unshift(cur);
-    return sorted;
-  }, [incomeTransactions]);
-
-  // Filtered by selected month + bank, sorted newest first
-  const filteredIncome = useMemo(() => {
-    return incomeTransactions
-      .filter(t => {
-        const matchMonth = getMonthKey(t.date) === selectedMonth;
-        const matchBank = filterBank === 'All' || (t.bank || '').toLowerCase() === filterBank.toLowerCase();
-        return matchMonth && matchBank;
-      })
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [incomeTransactions, selectedMonth, filterBank]);
-
-  const totalInflow = filteredIncome.reduce((acc, curr) => acc + curr.amount, 0);
 
   const selectStyle = {
     padding: '6px 12px',
@@ -125,11 +40,13 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
     cursor: 'pointer'
   };
 
+
+
   return (
     <div className="fade-in">
       <header className="page-header">
         <h2>Income Tracker</h2>
-        <p>Log all your credited amounts (salary, freelance, gifts, etc).</p>
+        <p>Log all your credited amounts. Reimbursements from split expenses appear here but are <strong>not counted as income</strong>.</p>
       </header>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
@@ -137,13 +54,10 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
           <div className="form-row" style={{ paddingBottom: '0.75rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)' }}>
             <div className="form-group flex-1">
               <label>Date</label>
-              <input
-                type="date"
+              <DateInput
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
-                onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                onFocus={(e) => e.target.showPicker && e.target.showPicker()}
                 required
               />
             </div>
@@ -159,15 +73,21 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
               />
             </div>
             <div className="form-group flex-1">
-              <label>Amount</label>
+              <label>Amount (₹)</label>
               <input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 name="amount"
                 value={formData.amount}
                 onChange={handleChange}
+                onBlur={() => {
+                  if (formData.amount !== '') {
+                    const parsed = parseFloat(formData.amount);
+                    setFormData(prev => ({ ...prev, amount: isNaN(parsed) ? '' : String(parsed) }));
+                  }
+                }}
                 required
-                min="0.01"
-                step="0.01"
+                placeholder="0.00"
               />
             </div>
           </div>
@@ -234,7 +154,7 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
               >
                 {availableMonths.map(mk => (
                   <option key={mk} value={mk}>
-                    {formatMonthLabel(mk)}{mk === getCurrentMonthKey() ? ' (Current)' : ''}
+                    {formatMonthLabel(mk)}{mk === currentMonthKey ? ' (Current)' : ''}
                   </option>
                 ))}
               </select>
@@ -257,8 +177,8 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
           </div>
         </div>
 
-        {/* Summary pill */}
-        {filteredIncome.length > 0 && (
+        {/* Summary pills */}
+        {allFiltered.length > 0 && (
           <div style={{ marginBottom: '1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <div style={{
               padding: '0.5rem 1rem',
@@ -268,11 +188,29 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
               borderRadius: '8px',
               fontSize: '0.85rem'
             }}>
-              <span style={{ color: 'var(--text-muted)' }}>Total Credited: </span>
+              <span style={{ color: 'var(--text-muted)' }}>Total Income: </span>
               <strong style={{ color: '#22c55e' }}>
                 +₹{totalInflow.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </strong>
             </div>
+
+            {totalReimbursed > 0 && (
+              <div style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: 'rgba(249, 115, 22, 0.08)',
+                border: '1px solid rgba(249, 115, 22, 0.15)',
+                borderLeft: '3px solid #f97316',
+                borderRadius: '8px',
+                fontSize: '0.85rem'
+              }}>
+                <span style={{ color: 'var(--text-muted)' }}>Reimbursements Received: </span>
+                <strong style={{ color: '#f97316' }}>
+                  +₹{totalReimbursed.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </strong>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.4rem' }}>(not counted in income)</span>
+              </div>
+            )}
+
             <div style={{
               padding: '0.5rem 1rem',
               backgroundColor: 'rgba(255,255,255,0.03)',
@@ -281,13 +219,13 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
               borderRadius: '8px',
               fontSize: '0.85rem'
             }}>
-              <span style={{ color: 'var(--text-muted)' }}>{filteredIncome.length} entries</span>
+              <span style={{ color: 'var(--text-muted)' }}>{allFiltered.length} entries</span>
             </div>
           </div>
         )}
 
-        {/* Income table */}
-        {filteredIncome.length === 0 ? (
+        {/* Income + Reimbursement table (combined, sorted by date) */}
+        {allFiltered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
             No income logged for {formatMonthLabel(selectedMonth)}.
           </div>
@@ -299,31 +237,78 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
                   <th>Date</th>
                   <th>Source</th>
                   <th>Amount</th>
+                  <th>Type</th>
                   <th>Bank</th>
                   <th>Payment Mode</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredIncome.map(t => (
-                  <tr key={t._id}>
-                    <td style={{ color: 'var(--text-muted)' }}>{formatDateDisplay(t.date)}</td>
-                    <td>{t.description}</td>
-                    <td className="amount income">₹{t.amount.toFixed(2)}</td>
-                    <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{t.bank || ''}</td>
-                    <td style={{ color: '#3b82f6' }}>{t.paymentMode}</td>
-                    <td>
-                      <button
-                        type="button"
-                        className="delete-btn"
-                        onClick={() => handleDelete(t._id)}
-                        style={{ padding: '4px' }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {allFiltered.map(t => {
+                  const isReimbursement = t.type === 'Reimbursement';
+                  return (
+                    <tr key={t._id} style={isReimbursement ? { backgroundColor: 'rgba(249, 115, 22, 0.04)' } : {}}>
+                      <td style={{ color: 'var(--text-muted)' }}>{formatDateDisplay(t.date)}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          {isReimbursement
+                            ? <RotateCcw size={14} color="#f97316" style={{ flexShrink: 0 }} />
+                            : <ArrowDownCircle size={14} color="#22c55e" style={{ flexShrink: 0 }} />
+                          }
+                          <span>{t.description}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span style={{
+                          fontWeight: '700',
+                          color: isReimbursement ? '#f97316' : '#22c55e'
+                        }}>
+                          +₹{t.amount.toFixed(2)}
+                        </span>
+                      </td>
+                      <td>
+                        {isReimbursement ? (
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            backgroundColor: 'rgba(249, 115, 22, 0.15)',
+                            color: '#f97316',
+                            border: '1px solid rgba(249, 115, 22, 0.3)',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            Split Reimbursement
+                          </span>
+                        ) : (
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                            color: '#22c55e',
+                            border: '1px solid rgba(34, 197, 94, 0.25)'
+                          }}>
+                            Income
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{t.bank || ''}</td>
+                      <td style={{ color: '#3b82f6' }}>{t.paymentMode}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="delete-btn"
+                          onClick={() => handleDelete(t._id)}
+                          style={{ padding: '4px' }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

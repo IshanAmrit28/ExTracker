@@ -1,78 +1,40 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import Sidebar from './components/Sidebar';
-import Dashboard from './components/Dashboard';
-import Setup from './components/Setup';
-import DailyTracker from './components/DailyTracker';
-import IncomeTracker from './components/IncomeTracker';
-import MonthlyAnalysis from './components/MonthlyAnalysis';
-import WeeklyAnalysis from './components/WeeklyAnalysis';
-import YearlyCalendar from './components/YearlyCalendar';
-import ReportsAndDiagnostics from './components/ReportsAndDiagnostics';
-import Auth from './components/Auth';
+import { useState } from 'react';
+import Sidebar from '../components/layout/Sidebar';
+import { AuthPage as Auth } from '../features/auth';
+import { DashboardPage as Dashboard } from '../features/dashboard';
+import { SettingsPage as Setup } from '../features/settings';
+import { DailyTrackerPage as DailyTracker } from '../features/transactions';
+import { IncomeTrackerPage as IncomeTracker } from '../features/income';
+import {
+  MonthlyAnalysisPage as MonthlyAnalysis,
+  WeeklyAnalysisPage as WeeklyAnalysis,
+  YearlyCalendarPage as YearlyCalendar,
+} from '../features/analytics';
+import { ReportsPage as ReportsAndDiagnostics } from '../features/reports';
 import { Analytics } from "@vercel/analytics/react";
 import { Menu } from 'lucide-react';
+import { useAppData } from '../hooks/useAppData';
 import './App.css';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-const API_URL = `${API_BASE_URL}/api/transactions`;
-const SETTINGS_URL = `${API_BASE_URL}/api/settings`;
-
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token') || '');
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const {
+    token,
+    setToken,
+    user,
+    saveUser,
+    transactions,
+    settings,
+    fetchTransactions,
+    fetchSettings,
+    handleLogout,
+  } = useAppData();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [transactions, setTransactions] = useState([]);
-  const [settings, setSettings] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    if (token) {
-      localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchTransactions();
-      fetchSettings();
-    } else {
-      localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
-    }
-  }, [token]);
-
-  const fetchTransactions = async () => {
-    try {
-      const res = await axios.get(API_URL);
-      setTransactions(res.data);
-    } catch (err) {
-      console.error('Error fetching transactions:', err);
-      if (err.response?.status === 401) handleLogout();
-    }
-  };
-
-  const fetchSettings = async () => {
-    try {
-      const res = await axios.get(SETTINGS_URL);
-      setSettings(res.data);
-    } catch (err) {
-      console.error('Error fetching settings:', err);
-      if (err.response?.status === 401) handleLogout();
-    }
-  };
-
-  const handleLogout = () => {
-    setToken('');
-    setUser(null);
-    localStorage.removeItem('user');
-    setSettings(null);
-    setTransactions([]);
-  };
 
   if (!token) {
     return (
       <>
-        <Auth setToken={setToken} setUser={setUser} />
+        <Auth setToken={setToken} setUser={saveUser} />
         <Analytics />
       </>
     );

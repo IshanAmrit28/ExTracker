@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import axios from 'axios';
+import { reportsApi } from '../../services/api';
 import { Download, Mail, AlertCircle, FileText, CheckCircle, Eye, ArrowLeft } from 'lucide-react';
 
 const ReportsAndDiagnostics = ({ transactions, settings, user }) => {
@@ -46,13 +46,16 @@ const ReportsAndDiagnostics = ({ transactions, settings, user }) => {
       if (!txByPeriod.weekly[weekKey]) txByPeriod.weekly[weekKey] = [];
       if (!txByPeriod.monthly[monthKey]) txByPeriod.monthly[monthKey] = [];
 
-      const amount = Number(t.amount);
-      if (t.type.toLowerCase() === 'income') {
+      if (t.type === 'Reimbursement') {
+        // Reimbursements are tracked separately and not counted as income or expense
+      } else if (t.type.toLowerCase() === 'income') {
+        const amount = Number(t.amount);
         weekly[weekKey].income += amount;
         monthly[monthKey].income += amount;
         weekly[weekKey].balance += amount;
         monthly[monthKey].balance += amount;
       } else {
+        const amount = t.isSplit && t.myShare != null ? Number(t.myShare) : Number(t.amount);
         weekly[weekKey].expense += amount;
         monthly[monthKey].expense += amount;
         weekly[weekKey].balance -= amount;
@@ -101,12 +104,16 @@ const ReportsAndDiagnostics = ({ transactions, settings, user }) => {
       const bank = t.bank || '';
       if (!groupedTxs[bank]) groupedTxs[bank] = { txs: [], income: 0, expense: 0, balance: 0 };
       groupedTxs[bank].txs.push(t);
-      if (t.type.toLowerCase() === 'income') {
+      if (t.type === 'Reimbursement') {
+        groupedTxs[bank].income += t.amount;
+        groupedTxs[bank].balance += t.amount;
+      } else if (t.type.toLowerCase() === 'income') {
         groupedTxs[bank].income += t.amount;
         groupedTxs[bank].balance += t.amount;
       } else {
-        groupedTxs[bank].expense += t.amount;
-        groupedTxs[bank].balance -= t.amount;
+        const expAmt = t.isSplit && t.myShare != null ? t.myShare : t.amount;
+        groupedTxs[bank].expense += expAmt;
+        groupedTxs[bank].balance -= expAmt;
       }
     });
     return groupedTxs;
@@ -243,8 +250,7 @@ const ReportsAndDiagnostics = ({ transactions, settings, user }) => {
         html += '</table><br/>';
       });
 
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-      await axios.post(`${API_BASE_URL}/api/reports/email`, {
+      await reportsApi.email({
         reportHtml: html,
         subject: `Finance Report: ${report.title}`
       });

@@ -54,6 +54,52 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     get: decrypt,
     set: encrypt
+  },
+  isSplit: {
+    type: Boolean,
+    default: false
+  },
+  splitMethod: {
+    type: String,
+    enum: ['equal', 'percentage', 'exact'],
+    default: 'equal'
+  },
+  splitWith: {
+    type: String,
+    get: decrypt,
+    set: encrypt
+  },
+  myShare: {
+    type: String,
+    get: (val) => (val != null && val !== '' ? Number(decrypt(val)) : null),
+    set: (val) => (val != null ? encrypt(val) : val)
+  },
+  recoverableAmount: {
+    type: String,
+    get: (val) => (val ? Number(decrypt(val)) : 0),
+    set: (val) => (val != null ? encrypt(val) : val)
+  },
+  splitMembers: [{
+    name: String,
+    amount: Number,
+    reimbursedAmount: { type: Number, default: 0 },
+    isFullyReimbursed: { type: Boolean, default: false }
+  }],
+  reimbursements: [{
+    personName: String,
+    amount: Number,
+    date: String,
+    notes: String,
+    createdAt: { type: Date, default: Date.now }
+  }],
+  reimbursedAmount: {
+    type: Number,
+    default: 0
+  },
+  reimbursementStatus: {
+    type: String,
+    enum: ['Pending', 'Partial', 'Completed'],
+    default: 'Pending'
   }
 }, { 
   timestamps: true,

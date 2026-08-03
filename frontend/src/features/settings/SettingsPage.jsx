@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { settingsApi } from '../../services/api';
 import { Trash2, Plus, Check, Crown } from 'lucide-react';
 
 const ALL_SERVICES = ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer', 'Cash'];
@@ -49,8 +49,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
 
   const saveSettingsToBackend = async (newFormData) => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-      await axios.post(`${API_BASE_URL}/api/settings`, newFormData);
+      await settingsApi.update(newFormData);
       fetchSettings();
     } catch (err) {
       console.error('Error auto-saving settings:', err);
@@ -112,8 +111,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
   const handleRequestWeeklyReport = async () => {
     setLoadingReport(true);
     try {
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-      const res = await axios.post(`${API_BASE_URL}/api/settings/send-weekly-report`);
+      const res = await settingsApi.sendWeeklyReport();
       alert(res.data.message || 'Weekly report sent to your email successfully!');
     } catch (err) {
       console.error('Error sending weekly report:', err);
@@ -126,8 +124,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
   const handleRequestMonthlyReport = async () => {
     setLoadingMonthlyReport(true);
     try {
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-      const res = await axios.post(`${API_BASE_URL}/api/settings/send-monthly-report`);
+      const res = await settingsApi.sendMonthlyReport();
       alert(res.data.message || 'Monthly report sent to your email successfully!');
     } catch (err) {
       console.error('Error sending monthly report:', err);
@@ -138,14 +135,29 @@ const Setup = ({ settings, fetchSettings, user }) => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: Number(e.target.value) });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleBlur = (fieldName, defaultVal = 0) => {
+    const val = formData[fieldName];
+    const parsed = parseFloat(val);
+    setFormData(prev => ({ ...prev, [fieldName]: isNaN(parsed) ? defaultVal : parsed }));
   };
 
   const handleUpdateSettings = async (e) => {
     e.preventDefault();
     try {
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-      await axios.post(`${API_BASE_URL}/api/settings`, formData);
+      // Ensure all fields are parsed numbers before sending
+      const cleanFormData = {
+        ...formData,
+        salary: Number(formData.salary) || 0,
+        weeklyLimit: Number(formData.weeklyLimit) || 0,
+        monthlyLimit: Number(formData.monthlyLimit) || 0,
+        needsPercentage: Number(formData.needsPercentage) || 0,
+        wantsPercentage: Number(formData.wantsPercentage) || 0,
+        savingsPercentage: Number(formData.savingsPercentage) || 0,
+      };
+      await settingsApi.update(cleanFormData);
       fetchSettings();
       alert('Settings updated successfully!');
     } catch (err) {
@@ -155,11 +167,11 @@ const Setup = ({ settings, fetchSettings, user }) => {
 
   const currentYear = new Date().getFullYear();
   const projections = [];
-  let projSalary = formData.salary || 50000;
+  let projSalary = Number(formData.salary) || 50000;
   
-  const needP = formData.needsPercentage / 100;
-  const wantP = formData.wantsPercentage / 100;
-  const saveP = formData.savingsPercentage / 100;
+  const needP = (Number(formData.needsPercentage) || 0) / 100;
+  const wantP = (Number(formData.wantsPercentage) || 0) / 100;
+  const saveP = (Number(formData.savingsPercentage) || 0) / 100;
   
   for (let i = 0; i < 5; i++) {
     projections.push({
@@ -172,7 +184,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
     projSalary *= 1.1; // 10% increase YoY
   }
 
-  const totalPercentage = formData.needsPercentage + formData.wantsPercentage + formData.savingsPercentage;
+  const totalPercentage = (Number(formData.needsPercentage) || 0) + (Number(formData.wantsPercentage) || 0) + (Number(formData.savingsPercentage) || 0);
 
   return (
     <div className="fade-in setup-container">
@@ -187,36 +199,41 @@ const Setup = ({ settings, fetchSettings, user }) => {
             <div className="form-group flex-1">
               <label>Current Base Salary (₹)</label>
               <input 
-                type="number" 
+                type="text"
+                inputMode="decimal"
                 name="salary"
                 value={formData.salary} 
-                onChange={handleChange} 
+                onChange={handleChange}
+                onBlur={() => handleBlur('salary', 50000)}
                 required 
               />
             </div>
             <div className="form-group flex-1">
               <label>Weekly Limit (₹)</label>
               <input 
-                type="number" 
+                type="text" 
+                inputMode="decimal"
                 name="weeklyLimit"
                 value={formData.weeklyLimit} 
-                onChange={handleChange} 
+                onChange={handleChange}
+                onBlur={() => handleBlur('weeklyLimit', 10000)}
                 required 
               />
             </div>
             <div className="form-group flex-1">
               <label>Monthly Spending Limit (₹)</label>
               <input 
-                type="number" 
+                type="text" 
+                inputMode="decimal"
                 name="monthlyLimit"
                 value={formData.monthlyLimit} 
                 onChange={handleChange}
-                min="0"
+                onBlur={() => handleBlur('monthlyLimit', 0)}
                 placeholder="e.g. 25000"
               />
-              {formData.monthlyLimit > 0 && (
+              {Number(formData.monthlyLimit) > 0 && (
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem', display: 'block' }}>
-                  ≈ ₹{Math.round(formData.monthlyLimit / 30).toLocaleString()} / day base limit
+                  ≈ ₹{Math.round(Number(formData.monthlyLimit) / 30).toLocaleString()} / day base limit
                 </span>
               )}
             </div>
@@ -227,30 +244,36 @@ const Setup = ({ settings, fetchSettings, user }) => {
             <div className="form-group flex-1">
               <label>Needs (%)</label>
               <input 
-                type="number" 
+                type="text" 
+                inputMode="numeric"
                 name="needsPercentage"
                 value={formData.needsPercentage} 
-                onChange={handleChange} 
+                onChange={handleChange}
+                onBlur={() => handleBlur('needsPercentage', 50)}
                 required 
               />
             </div>
             <div className="form-group flex-1">
               <label>Wants (%)</label>
               <input 
-                type="number" 
+                type="text" 
+                inputMode="numeric"
                 name="wantsPercentage"
                 value={formData.wantsPercentage} 
-                onChange={handleChange} 
+                onChange={handleChange}
+                onBlur={() => handleBlur('wantsPercentage', 30)}
                 required 
               />
             </div>
             <div className="form-group flex-1">
               <label>Savings (%)</label>
               <input 
-                type="number" 
+                type="text" 
+                inputMode="numeric"
                 name="savingsPercentage"
                 value={formData.savingsPercentage} 
-                onChange={handleChange} 
+                onChange={handleChange}
+                onBlur={() => handleBlur('savingsPercentage', 20)}
                 required 
               />
             </div>

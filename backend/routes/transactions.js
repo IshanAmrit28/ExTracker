@@ -19,4 +19,9 @@ router.delete('/:id', auth, transactionController.deleteTransaction);
 // @desc    Get summarized data for a specific month
 router.get('/summary/:yearMonth', auth, transactionController.getSummary);
 
+// @route   POST /api/transactions/:id/reimburse
+// @desc    Record a reimbursement for a split transaction
+router.post('/:id/reimburse', auth, transactionController.recordReimbursement);
+router.post('/:id/reimbursements', auth, transactionController.recordReimbursements);
+
 module.exports = router;
