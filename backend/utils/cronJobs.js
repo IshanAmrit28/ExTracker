@@ -325,7 +325,13 @@ const initCronJobs = () => {
       const safeDateForSunday = new Date(Date.now() - 2 * 60 * 60 * 1000); // -2 hours
       const users = await User.find({});
       for (const user of users) {
-        await generateAndSendReportForUser(user, true, safeDateForSunday);
+        try {
+          await generateAndSendReportForUser(user, true, safeDateForSunday);
+        } catch (err) {
+          // Continue processing so one user's email/report failure does not
+          // prevent the rest of the users from receiving their weekly report.
+          console.error(`Failed to send weekly report for ${user.email}:`, err.message);
+        }
       }
     } catch (err) {
       console.error('Error running weekly report cron job:', err);
@@ -343,7 +349,11 @@ const initCronJobs = () => {
       const safeDateFor1st = new Date(Date.now() + 2 * 60 * 60 * 1000); // +2 hours
       const users = await User.find({});
       for (const user of users) {
-        await generateAndSendMonthlyReportForUser(user, true, safeDateFor1st);
+        try {
+          await generateAndSendMonthlyReportForUser(user, true, safeDateFor1st);
+        } catch (err) {
+          console.error(`Failed to send monthly report for ${user.email}:`, err.message);
+        }
       }
     } catch (err) {
       console.error('Error running monthly report cron job:', err);

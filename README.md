@@ -55,6 +55,7 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_super_secret_jwt_key
 ENCRYPTION_KEY=a_secure_32_character_string_for_aes_256
 FRONTEND_URI=http://localhost:5173
+RESEND_API_KEY=your_resend_api_key
 ```
 
 **Frontend (`frontend/.env`):**
@@ -128,4 +129,3 @@ You can manually run and test the report dispatch from the GitHub **Actions** ta
 
 ## 📄 License
 This project is open-source and available under the MIT License.
-
