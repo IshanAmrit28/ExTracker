@@ -1,5 +1,5 @@
 import { useIncomeTracker } from './useIncomeTracker';
-import { Trash2, ArrowDownCircle, RotateCcw } from 'lucide-react';
+import { Trash2, ArrowDownCircle, RotateCcw, Pencil } from 'lucide-react';
 import { formatDateDisplay } from '../../utils/dateUtils';
 import DateInput from '../../components/DateInput';
 
@@ -11,6 +11,9 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
     setSelectedMonth,
     formData,
     setFormData,
+    editingTransaction,
+    startEditing,
+    cancelEditing,
     handleChange,
     handleSubmit,
     handleDelete,
@@ -120,8 +123,13 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
 
           <div style={{ marginTop: '1.25rem' }}>
             <button type="submit" className="btn-success" style={{ maxWidth: '240px' }}>
-              Add Income
+              {editingTransaction ? 'Save Changes' : 'Add Income'}
             </button>
+            {editingTransaction && (
+              <button type="button" className="btn-secondary" onClick={cancelEditing} style={{ marginLeft: '0.75rem', maxWidth: '160px' }}>
+                Cancel
+              </button>
+            )}
           </div>
         </form>
       </div>
@@ -297,12 +305,13 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
                       <td style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>{t.bank || ''}</td>
                       <td style={{ color: '#3b82f6' }}>{t.paymentMode}</td>
                       <td>
-                        <button
-                          type="button"
-                          className="delete-btn"
-                          onClick={() => handleDelete(t._id)}
-                          style={{ padding: '4px' }}
-                        >
+                        {!isReimbursement && (
+                          <button type="button" className="btn-secondary" onClick={() => startEditing(t)} style={{ padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }} title="Edit income">
+                            <Pencil size={15} />
+                            <span>Edit</span>
+                          </button>
+                        )}
+                        <button type="button" className="delete-btn" onClick={() => handleDelete(t._id)} style={{ padding: '4px' }}>
                           <Trash2 size={16} />
                         </button>
                       </td>

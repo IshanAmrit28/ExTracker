@@ -15,6 +15,7 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
   const [reimburseDate, setReimburseDate] = useState(getLocalDateString());
   const [reimburseNotes, setReimburseNotes] = useState("");
   const [submittingReimburse, setSubmittingReimburse] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   const availableMonths = useMemo(() => {
     const keys = new Set(
@@ -111,6 +112,19 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
     }
   };
 
+  const handleUpdate = async (id, payload) => {
+    try {
+      await transactionsApi.update(id, payload);
+      await fetchTransactions();
+      setEditingTransaction(null);
+      alert("Transaction updated!");
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+      alert(error.response?.data?.message || "Unable to update transaction.");
+      throw error;
+    }
+  };
+
   const handleToggleTransaction = (id) => {
     setExpandedTxId((current) => (current === id ? null : id));
     setReimbursePerson("");
@@ -139,7 +153,13 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
 
       <SmartBudgetWidget transactions={transactions} settings={settings} />
 
-      <TransactionForm settings={settings} fetchTransactions={fetchTransactions} />
+      <TransactionForm
+        settings={settings}
+        fetchTransactions={fetchTransactions}
+        editingTransaction={editingTransaction}
+        onUpdate={handleUpdate}
+        onCancelEdit={() => setEditingTransaction(null)}
+      />
 
       <TransactionTable
         settings={settings}
@@ -150,6 +170,7 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
         filterBank={filterBank}
         setFilterBank={setFilterBank}
         handleDelete={handleDelete}
+        onEdit={setEditingTransaction}
         expandedTxId={expandedTxId}
         onToggleTransaction={handleToggleTransaction}
         reimbursementState={reimbursementState}

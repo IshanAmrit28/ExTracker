@@ -35,6 +35,25 @@ export const useIncomeTracker = ({ transactions, settings, fetchTransactions }) 
   const [filterBank, setFilterBank] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey());
   const [formData, setFormData] = useState(() => createInitialForm(settings));
+  const [editingTransaction, setEditingTransaction] = useState(null);
+
+  const startEditing = (transaction) => {
+    setEditingTransaction(transaction);
+    setFormData({
+      description: transaction.description || "",
+      amount: String(transaction.amount ?? ""),
+      category: transaction.category || "Income",
+      type: transaction.type || "Income",
+      bank: transaction.bank || "",
+      paymentMode: transaction.paymentMode || "",
+      date: String(transaction.date || "").slice(0, 10),
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingTransaction(null);
+    setFormData((previous) => createInitialForm(settings, previous.date));
+  };
 
   const handleBankChange = (bankName) => {
     const bank = settings?.banks?.find((item) => item.name === bankName);
@@ -59,6 +78,14 @@ export const useIncomeTracker = ({ transactions, settings, fetchTransactions }) 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
+      if (editingTransaction) {
+        await transactionsApi.update(editingTransaction._id, formData);
+        setEditingTransaction(null);
+        await fetchTransactions();
+        setFormData((previous) => createInitialForm(settings, previous.date));
+        alert("Income updated!");
+        return;
+      }
       await transactionsApi.create(formData);
       await fetchTransactions();
       setFormData((previous) => createInitialForm(settings, previous.date));
@@ -117,6 +144,9 @@ export const useIncomeTracker = ({ transactions, settings, fetchTransactions }) 
     setSelectedMonth,
     formData,
     setFormData,
+    editingTransaction,
+    startEditing,
+    cancelEditing,
     handleChange,
     handleSubmit,
     handleDelete,

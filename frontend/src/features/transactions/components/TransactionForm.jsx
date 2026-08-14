@@ -29,7 +29,7 @@ const buildDefaultFormData = (settings) => {
   };
 };
 
-const TransactionForm = ({ settings, fetchTransactions }) => {
+const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUpdate, onCancelEdit }) => {
   const [formData, setFormData] = useState(buildDefaultFormData(settings));
   const [showInfo, setShowInfo] = useState(false);
   const [isSplit, setIsSplit] = useState(false);
@@ -47,6 +47,28 @@ const TransactionForm = ({ settings, fetchTransactions }) => {
       paymentMode: prev.paymentMode || settings.banks?.[0]?.services?.[0] || "",
     }));
   }, [settings]);
+
+  useEffect(() => {
+    if (!editingTransaction) return;
+    setFormData({
+      description: editingTransaction.description || "",
+      amount: String(editingTransaction.amount ?? ""),
+      category: editingTransaction.category || "",
+      type: editingTransaction.type || "Need",
+      bank: editingTransaction.bank || "",
+      paymentMode: editingTransaction.paymentMode || "",
+      date: String(editingTransaction.date || "").slice(0, 10),
+      notes: editingTransaction.notes || "",
+    });
+    setIsSplit(Boolean(editingTransaction.isSplit));
+    setSplitMethod(editingTransaction.splitMethod || "equal");
+    setNumPeople(String((editingTransaction.splitMembers?.length || 1) + 1));
+    setMembers((editingTransaction.splitMembers || []).map((member) => ({
+      name: member.name || "",
+      amount: String(member.amount ?? ""),
+      percentage: String(member.percentage ?? ""),
+    })));
+  }, [editingTransaction]);
 
   const totalAmountVal = Number(formData.amount) || 0;
 
@@ -150,6 +172,11 @@ const TransactionForm = ({ settings, fetchTransactions }) => {
         myShare: isSplit ? calculatedMyShare : parsedAmount,
         recoverableAmount: isSplit ? calculatedRecoverable : 0,
       };
+
+      if (editingTransaction) {
+        await onUpdate(editingTransaction._id, payload);
+        return;
+      }
 
       const createdRes = await transactionsApi.create(payload);
       const createdId = createdRes.data._id || createdRes.data.id;
@@ -447,8 +474,18 @@ const TransactionForm = ({ settings, fetchTransactions }) => {
             className="btn-primary"
             style={{ maxWidth: "240px" }}
           >
-            Add Transaction
+            {editingTransaction ? "Save Changes" : "Add Transaction"}
           </button>
+          {editingTransaction && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={onCancelEdit}
+              style={{ marginLeft: "0.75rem", maxWidth: "160px" }}
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </form>
     </div>

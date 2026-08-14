@@ -23,6 +23,7 @@ export const authApi = {
 export const transactionsApi = {
   list: () => apiClient.get("/transactions"),
   create: (transaction) => apiClient.post("/transactions", transaction),
+  update: (id, transaction) => apiClient.put(`/transactions/${id}`, transaction),
   remove: (id) => apiClient.delete(`/transactions/${id}`),
   recordReimbursement: (id, reimbursement) =>
     apiClient.post(`/transactions/${id}/reimburse`, reimbursement),

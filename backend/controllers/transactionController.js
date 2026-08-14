@@ -88,6 +88,67 @@ exports.createTransaction = async (req, res) => {
   }
 };
 
+exports.updateTransaction = async (req, res) => {
+  try {
+    const transaction = await Transaction.findById(req.params.id);
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+    if (transaction.userId.toString() !== req.user.id) {
+      return res.status(401).json({ message: 'User not authorized' });
+    }
+
+    const amount = roundCurrency(req.body.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ message: 'Transaction amount must be greater than 0.' });
+    }
+    if (!req.body.date || !req.body.description || !req.body.category || !req.body.type) {
+      return res.status(400).json({ message: 'Date, description, category, and type are required.' });
+    }
+
+    const isSplit = Boolean(req.body.isSplit);
+    let myShare = amount;
+    let recoverable = 0;
+    let splitMembers = [];
+    if (isSplit) {
+      const result = validateSplitExpense({ amount, myShare: req.body.myShare, members: req.body.splitMembers });
+      if (result.error) return res.status(400).json({ message: result.error });
+      myShare = result.personalShare;
+      recoverable = result.recoverableAmount;
+      splitMembers = result.members.map((member) => {
+        const previous = transaction.splitMembers?.find((item) => item.name.toLowerCase() === member.name.toLowerCase());
+        return { ...member, reimbursedAmount: previous?.reimbursedAmount || 0, isFullyReimbursed: previous?.isFullyReimbursed || false };
+      });
+      if (recoverable + 0.01 < (transaction.reimbursedAmount || 0)) {
+        return res.status(400).json({ message: 'Recoverable amount cannot be less than reimbursements already received.' });
+      }
+    } else if ((transaction.reimbursedAmount || 0) > 0) {
+      return res.status(400).json({ message: 'A reimbursed split transaction cannot be changed to a non-split transaction.' });
+    }
+
+    transaction.date = req.body.date;
+    transaction.description = req.body.description;
+    transaction.category = req.body.category;
+    transaction.type = req.body.type;
+    transaction.paymentMode = req.body.paymentMode || transaction.paymentMode;
+    transaction.bank = req.body.bank || transaction.bank;
+    transaction.amount = amount;
+    transaction.notes = req.body.notes;
+    transaction.isSplit = isSplit;
+    transaction.splitMethod = req.body.splitMethod || 'equal';
+    transaction.splitWith = req.body.splitWith || '';
+    transaction.splitMembers = splitMembers;
+    transaction.myShare = myShare;
+    transaction.recoverableAmount = recoverable;
+    transaction.reimbursementStatus = isSplit && recoverable > (transaction.reimbursedAmount || 0)
+      ? ((transaction.reimbursedAmount || 0) > 0 ? 'Partial' : 'Pending')
+      : 'Completed';
+
+    await transaction.save();
+    res.json(transaction);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
 exports.recordReimbursement = async (req, res) => {
   try {
     const { id } = req.params;

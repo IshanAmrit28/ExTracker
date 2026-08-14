@@ -22,6 +22,7 @@ const TransactionTable = ({
   filterBank,
   setFilterBank,
   handleDelete,
+  onEdit,
   expandedTxId,
   onToggleTransaction,
   reimbursementState,
@@ -213,6 +214,7 @@ const TransactionTable = ({
                   isExpanded={expandedTxId === transaction._id}
                   onToggleExpand={onToggleTransaction}
                   onDelete={handleDelete}
+                  onEdit={onEdit}
                   reimbursementState={reimbursementState}
                   onRecordReimbursement={handleRecordReimbursement}
                   formatDateDisplay={formatDateDisplay}

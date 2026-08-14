@@ -3,6 +3,7 @@ import {
   ChevronDown,
   ChevronRight,
   Trash2,
+  Pencil,
   CheckCircle,
   PlusCircle,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const TransactionRow = ({
   isExpanded,
   onToggleExpand,
   onDelete,
+  onEdit,
   reimbursementState,
   onRecordReimbursement,
   formatDateDisplay,
@@ -162,6 +164,16 @@ const TransactionRow = ({
                 Reimburse
               </button>
             )}
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => onEdit(transaction)}
+              style={{ padding: "4px 8px", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+              title="Edit transaction"
+            >
+              <Pencil size={15} />
+              <span>Edit</span>
+            </button>
             <button
               type="button"
               className="delete-btn"

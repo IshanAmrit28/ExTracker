@@ -11,6 +11,10 @@ router.get('/', auth, transactionController.getTransactions);
 // @desc    Create a transaction
 router.post('/', auth, transactionController.createTransaction);
 
+// @route   PUT /api/transactions/:id
+// @desc    Update a transaction
+router.put('/:id', auth, transactionController.updateTransaction);
+
 // @route   DELETE /api/transactions/:id
 // @desc    Delete a transaction
 router.delete('/:id', auth, transactionController.deleteTransaction);
