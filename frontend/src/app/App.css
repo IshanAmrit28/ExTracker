@@ -355,6 +355,24 @@ body {
   white-space: nowrap;
 }
 
+.monthly-daily-table th,
+.monthly-daily-table td {
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  line-height: 1.2;
+}
+
+.monthly-daily-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.monthly-daily-table th:last-child,
+.monthly-daily-table td:last-child {
+  width: 32%;
+  text-align: right;
+}
+
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
@@ -993,6 +1011,64 @@ select option {
     overflow-wrap: anywhere;
   }
 
+  .monthly-analysis-controls {
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .monthly-analysis-controls > div:not(.monthly-analysis-total) {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .monthly-analysis-controls select {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .monthly-analysis-total {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  .monthly-analysis-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .monthly-analysis-card {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .monthly-analysis-card .category-donut-wrap {
+    width: min(100%, 245px);
+    height: 210px;
+  }
+
+  .monthly-analysis-card .category-legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .monthly-daily-table th,
+  .monthly-daily-table td {
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+    line-height: 1.15;
+  }
+
+  .monthly-daily-table th:first-child,
+  .monthly-daily-table td:first-child {
+    width: 52%;
+  }
+
+  .monthly-daily-table th:last-child,
+  .monthly-daily-table td:last-child {
+    width: 48%;
+  }
+
   .monthly-grid {
     grid-template-columns: 1fr !important;
   }
@@ -1016,6 +1092,11 @@ select option {
 
   .data-table {
     min-width: 700px;
+  }
+
+  .monthly-daily-table {
+    width: 100% !important;
+    min-width: 0 !important;
   }
 
   .table-responsive {
@@ -1050,6 +1131,11 @@ select option {
 
   .data-table {
     min-width: 640px;
+  }
+
+  .monthly-daily-table {
+    width: 100% !important;
+    min-width: 0 !important;
   }
 
   .data-entry-modal {

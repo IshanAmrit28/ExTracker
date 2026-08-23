@@ -94,7 +94,7 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
       </header>
 
       {/* Control row with Month & Bank Selectors */}
-      <div style={{ display: 'flex', gap: '1.25rem', marginBottom: '1.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="monthly-analysis-controls" style={{ display: 'flex', gap: '1.25rem', marginBottom: '1.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Month:</label>
           <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={selectStyle}>
@@ -116,15 +116,15 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
           </select>
         </div>
 
-        <div style={{ marginLeft: 'auto', padding: '0.5rem 1rem', backgroundColor: 'rgba(249, 115, 22, 0.08)', border: '1px solid rgba(249, 115, 22, 0.18)', borderLeft: '3px solid var(--primary-color)', borderRadius: '8px', fontSize: '0.85rem' }}>
+        <div className="monthly-analysis-total" style={{ marginLeft: 'auto', padding: '0.5rem 1rem', backgroundColor: 'rgba(249, 115, 22, 0.08)', border: '1px solid rgba(249, 115, 22, 0.18)', borderLeft: '3px solid var(--primary-color)', borderRadius: '8px', fontSize: '0.85rem' }}>
           <span style={{ color: 'var(--text-muted)' }}>Total Outflow: </span>
           <strong style={{ color: 'var(--primary-color)', fontSize: '1rem' }}>₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
         </div>
       </div>
 
-      <div className="dashboard" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className="dashboard monthly-analysis-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
         {/* Donut Chart */}
-        <div className="card">
+        <div className="card monthly-analysis-card">
           <h3 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Category Breakup</h3>
           {pieData.length > 0 ? (
             <div className="category-breakup-chart">
@@ -172,11 +172,11 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
         </div>
 
         {/* Daily Spend Table */}
-        <div className="card">
+        <div className="card monthly-analysis-card">
           <h3>Daily Spend Log</h3>
           <p className="helper-text" style={{ marginBottom: '1rem' }}>Excludes savings. Shows total Need + Want spent per day.</p>
           <div className="table-responsive" style={{ maxHeight: '350px', overflowY: 'auto' }}>
-            <table className="data-table">
+            <table className="data-table monthly-daily-table">
               <thead>
                 <tr>
                   <th>Date</th>
