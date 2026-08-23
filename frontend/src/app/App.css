@@ -263,6 +263,11 @@ body {
   margin-bottom: 2rem;
 }
 
+.setup-install-button {
+  width: auto;
+  margin-bottom: 1.5rem;
+}
+
 .data-entry-modal {
   position: fixed;
   inset: 0;
@@ -922,6 +927,10 @@ select option {
   }
 
   .data-entry-trigger {
+    width: 100%;
+  }
+
+  .setup-install-button {
     width: 100%;
   }
 }

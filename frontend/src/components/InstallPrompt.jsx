@@ -48,6 +48,23 @@ const InstallPrompt = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (isStandalone()) return undefined;
+    const handleInstallRequest = async () => {
+      if (!deferredPrompt) {
+        setShowPrompt(true);
+        return;
+      }
+      await deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+      setShowPrompt(false);
+    };
+
+    window.addEventListener("extracker:install", handleInstallRequest);
+    return () => window.removeEventListener("extracker:install", handleInstallRequest);
+  }, [deferredPrompt]);
+
   const dismiss = () => {
     localStorage.setItem(DISMISSED_KEY, String(Date.now()));
     setShowPrompt(false);
@@ -70,11 +87,13 @@ const InstallPrompt = () => {
         <strong>Install ExTracker</strong>
         {iosDevice ? (
           <span>Tap <Share size={14} /> then “Add to Home Screen”.</span>
-        ) : (
+        ) : deferredPrompt ? (
           <span>Use ExTracker like an app from your home screen.</span>
+        ) : (
+          <span>Open your browser menu and choose “Install app” or “Add to Home screen”.</span>
         )}
       </div>
-      {!iosDevice && (
+      {!iosDevice && deferredPrompt && (
         <button type="button" className="install-prompt-action" onClick={install}>
           Install
         </button>

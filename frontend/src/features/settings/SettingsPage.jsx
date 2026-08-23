@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { settingsApi } from '../../services/api';
-import { Trash2, Plus, Check, Crown, X } from 'lucide-react';
+import { Trash2, Plus, Check, Crown, X, Download } from 'lucide-react';
 
 const ALL_SERVICES = ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer', 'Cash'];
 
@@ -138,6 +138,10 @@ const Setup = ({ settings, fetchSettings, user }) => {
     }
   };
 
+  const handleInstallApplication = () => {
+    window.dispatchEvent(new Event('extracker:install'));
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -197,6 +201,10 @@ const Setup = ({ settings, fetchSettings, user }) => {
         <h2>Setup & Parameters</h2>
         <p>Configure your foundational budget rules, limits, and categorizations</p>
       </header>
+
+      <button type="button" className="btn-secondary setup-install-button" onClick={handleInstallApplication}>
+        <Download size={17} /> Install ExTracker as an application
+      </button>
 
       <div className="card setup-card">
         <h3 className="setup-section-title">Budget & Limits</h3>
