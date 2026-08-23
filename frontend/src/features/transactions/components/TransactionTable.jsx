@@ -21,6 +21,8 @@ const TransactionTable = ({
   setSelectedMonth,
   filterBank,
   setFilterBank,
+  transactionView,
+  setTransactionView,
   handleDelete,
   onEdit,
   expandedTxId,
@@ -51,7 +53,7 @@ const TransactionTable = ({
               fontWeight: "normal",
             }}
           >
-            — {formatMonthLabel(selectedMonth)}
+            — {formatMonthLabel(selectedMonth)} · Newest dates first
           </span>
         </div>
 
@@ -107,6 +109,27 @@ const TransactionTable = ({
                   {bank.name}
                 </option>
               ))}
+            </select>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <label
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--text-muted)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              View:
+            </label>
+            <select
+              value={transactionView}
+              onChange={(e) => setTransactionView(e.target.value)}
+              style={selectStyle}
+              aria-label="Transaction view"
+            >
+              <option value="overall">Overall Transactions</option>
+              <option value="outgoing">Outgoing Only</option>
             </select>
           </div>
         </div>
@@ -202,7 +225,6 @@ const TransactionTable = ({
                 <th>My Share / Amount</th>
                 <th>Bank</th>
                 <th>Payment Mode</th>
-                <th>Type</th>
                 <th>Action</th>
               </tr>
             </thead>

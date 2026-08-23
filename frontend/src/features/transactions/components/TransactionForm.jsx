@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { transactionsApi } from "../../../services/api";
-import { Info, Split } from "lucide-react";
+import { Split } from "lucide-react";
 import { getLocalDateString } from "../../../utils/dateUtils";
 import DateInput from "../../../components/DateInput";
 import SplitExpensePanel from "./SplitExpensePanel";
@@ -29,9 +29,8 @@ const buildDefaultFormData = (settings) => {
   };
 };
 
-const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUpdate, onCancelEdit }) => {
+const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUpdate, onCancelEdit, onSaved }) => {
   const [formData, setFormData] = useState(buildDefaultFormData(settings));
-  const [showInfo, setShowInfo] = useState(false);
   const [isSplit, setIsSplit] = useState(false);
   const [splitMethod, setSplitMethod] = useState("equal");
   const [numPeople, setNumPeople] = useState("2");
@@ -201,6 +200,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
       }
 
       fetchTransactions();
+      onSaved?.(formData.date);
       setFormData(buildDefaultFormData(settings));
       setIsSplit(false);
       setSplitMethod("equal");
@@ -228,7 +228,14 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
 
   return (
     <div className="card" style={{ marginBottom: "2rem" }}>
-      <form onSubmit={handleSubmit}>
+      <div className="data-entry-header">
+        <div>
+          <h3>{editingTransaction ? "Edit Transaction" : "Add Transaction"}</h3>
+          <p>Enter the transaction details below.</p>
+        </div>
+        {editingTransaction && <span className="data-entry-status">Editing</span>}
+      </div>
+      <form className="data-entry-form" onSubmit={handleSubmit}>
         <div
           className="form-row"
           style={{
@@ -280,17 +287,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
 
         <div className="form-row">
           <div className="form-group flex-1">
-            <label
-              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-            >
-              Category
-              <Info
-                size={16}
-                style={{ cursor: "pointer", color: "var(--primary-color)" }}
-                onClick={() => setShowInfo((prev) => !prev)}
-                title="Click for category guide"
-              />
-            </label>
+            <label>Category</label>
             <select
               name="category"
               value={formData.category}
@@ -336,19 +333,6 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
             </select>
           </div>
 
-          <div className="form-group flex-1">
-            <label>Type</label>
-            <select
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              required
-            >
-              <option value="Need">Need</option>
-              <option value="Want">Want</option>
-              <option value="Saving">Saving</option>
-            </select>
-          </div>
         </div>
 
         <div
@@ -421,52 +405,6 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
             />
           )}
         </div>
-
-        {showInfo && (
-          <div
-            style={{
-              marginTop: "1.25rem",
-              padding: "1rem",
-              backgroundColor: "rgba(59, 130, 246, 0.1)",
-              borderRadius: "8px",
-              border: "1px solid rgba(59, 130, 246, 0.2)",
-            }}
-          >
-            <h4
-              style={{
-                marginBottom: "0.5rem",
-                color: "var(--primary-color)",
-                fontSize: "0.95rem",
-              }}
-            >
-              Category & Budget Guide
-            </h4>
-            <ul
-              style={{
-                fontSize: "0.85rem",
-                color: "var(--text-muted)",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.5rem",
-                listStyle: "none",
-                padding: 0,
-              }}
-            >
-              <li>
-                <strong>Need:</strong> Critical expenses (e.g. Rent, Groceries,
-                Bills & Utilities, Health, Transport).
-              </li>
-              <li>
-                <strong>Want:</strong> Lifestyle spending (e.g. Entertainment,
-                Food & Dining, Shopping).
-              </li>
-              <li>
-                <strong>Saving:</strong> Future investments (e.g. Savings &
-                Investments).
-              </li>
-            </ul>
-          </div>
-        )}
 
         <div style={{ marginTop: "1.25rem" }}>
           <button

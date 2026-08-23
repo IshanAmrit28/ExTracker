@@ -213,6 +213,94 @@ body {
 .flex-1 { flex: 1; }
 .form-group { margin-bottom: 1.25rem; }
 
+.data-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-entry-header h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+}
+
+.data-entry-header p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.data-entry-status {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: 999px;
+  color: var(--primary-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.data-entry-form {
+  width: 100%;
+}
+
+.category-breakup-chart {
+  width: 100%;
+}
+
+.category-donut-wrap {
+  width: min(100%, 290px);
+  height: 235px;
+  position: relative;
+  margin: 0 auto 0.75rem;
+}
+
+.category-donut-total {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.category-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 0.9rem;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.category-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.category-legend-swatch {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 2px;
+}
+
+.category-legend-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;

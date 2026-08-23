@@ -53,7 +53,14 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
       </header>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
-        <form onSubmit={handleSubmit}>
+        <div className="data-entry-header">
+          <div>
+            <h3>{editingTransaction ? 'Edit Income' : 'Add Income'}</h3>
+            <p>Enter the credited amount and account details below.</p>
+          </div>
+          {editingTransaction && <span className="data-entry-status">Editing</span>}
+        </div>
+        <form className="data-entry-form" onSubmit={handleSubmit}>
           <div className="form-row" style={{ paddingBottom: '0.75rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)' }}>
             <div className="form-group flex-1">
               <label>Date</label>

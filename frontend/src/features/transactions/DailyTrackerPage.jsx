@@ -8,6 +8,7 @@ import { getLocalDateString } from "../../utils/dateUtils";
 
 const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
   const [filterBank, setFilterBank] = useState("All");
+  const [transactionView, setTransactionView] = useState("overall");
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey());
   const [expandedTxId, setExpandedTxId] = useState(null);
   const [reimbursePerson, setReimbursePerson] = useState("");
@@ -31,19 +32,37 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
     return transactions
       .filter((tx) => {
         if (tx.type === "Reimbursement") return false;
+        if (
+          transactionView === "outgoing" &&
+          !["Need", "Want", "Saving", "expense"].includes(tx.type)
+        ) {
+          return false;
+        }
         const matchMonth = getMonthKey(tx.date) === selectedMonth;
         const matchBank =
           filterBank === "All" ||
           (tx.bank || "").toLowerCase() === filterBank.toLowerCase();
         return matchMonth && matchBank;
       })
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
-  }, [transactions, selectedMonth, filterBank]);
+      .sort(
+        (a, b) => {
+          const dateA = String(a.date || "").slice(0, 10);
+          const dateB = String(b.date || "").slice(0, 10);
+          const dateOrder = dateB.localeCompare(dateA);
+          if (dateOrder !== 0) return dateOrder;
+
+          return (
+            new Date(b.createdAt || b.date) -
+            new Date(a.createdAt || a.date)
+          );
+        },
+      );
+  }, [transactions, selectedMonth, filterBank, transactionView]);
 
   const totalOutflow = useMemo(
     () =>
       filteredTransactions
-        .filter((tx) => ["Need", "Want", "expense"].includes(tx.type))
+        .filter((tx) => ["Need", "Want", "Saving", "expense"].includes(tx.type))
         .reduce(
           (sum, tx) =>
             sum + (tx.isSplit && tx.myShare != null ? tx.myShare : tx.amount),
@@ -116,6 +135,7 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
     try {
       await transactionsApi.update(id, payload);
       await fetchTransactions();
+      setSelectedMonth(getMonthKey(payload.date));
       setEditingTransaction(null);
       alert("Transaction updated!");
     } catch (error) {
@@ -159,6 +179,7 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
         editingTransaction={editingTransaction}
         onUpdate={handleUpdate}
         onCancelEdit={() => setEditingTransaction(null)}
+        onSaved={(date) => setSelectedMonth(getMonthKey(date))}
       />
 
       <TransactionTable
@@ -169,6 +190,8 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
         setSelectedMonth={setSelectedMonth}
         filterBank={filterBank}
         setFilterBank={setFilterBank}
+        transactionView={transactionView}
+        setTransactionView={setTransactionView}
         handleDelete={handleDelete}
         onEdit={setEditingTransaction}
         expandedTxId={expandedTxId}

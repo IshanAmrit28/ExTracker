@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatMonthLabel, getCurrentMonthKey, getMonthKey } from '../../../utils/finance/dates';
 import { getExpenseShare, isExpense } from '../../../utils/finance/transactions';
 
@@ -127,15 +127,16 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
         <div className="card">
           <h3 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Category Breakup</h3>
           {pieData.length > 0 ? (
-            <div style={{ height: '320px', position: 'relative' }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="category-breakup-chart">
+              <div className="category-donut-wrap">
+                <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie 
                     data={pieData} 
                     cx="50%" 
                     cy="50%" 
-                    innerRadius={70} 
-                    outerRadius={105} 
+                    innerRadius="58%"
+                    outerRadius="82%"
                     paddingAngle={3} 
                     dataKey="value"
                   >
@@ -149,13 +150,20 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
                     labelStyle={{ color: 'var(--text-main)' }}
                     itemStyle={{ color: 'var(--text-main)' }}
                   />
-                  <Legend layout="horizontal" verticalAlign="bottom" align="center" />
                 </PieChart>
-              </ResponsiveContainer>
-              {/* Donut Center Label */}
-              <div style={{ position: 'absolute', top: '44%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+                </ResponsiveContainer>
+                <div className="category-donut-total">
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Spent</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)' }}>₹{Math.round(totalSpent).toLocaleString()}</div>
+                </div>
+              </div>
+              <div className="category-legend" aria-label="Spending categories">
+                {pieData.map((entry, index) => (
+                  <div className="category-legend-item" key={`legend-${entry.name}`} title={`${entry.name}: ₹${entry.value.toFixed(2)}`}>
+                    <span className="category-legend-swatch" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                    <span className="category-legend-name">{entry.name}</span>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (

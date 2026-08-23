@@ -142,11 +142,6 @@ const TransactionRow = ({
         </td>
         <td style={{ color: "#3b82f6" }}>{transaction.paymentMode}</td>
         <td>
-          <span className={`badge-type ${transaction.type.toLowerCase()}`}>
-            {transaction.type}
-          </span>
-        </td>
-        <td>
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
             {isSplitTransaction && (
               <button
@@ -189,7 +184,7 @@ const TransactionRow = ({
       {isSplitTransaction && isExpanded && (
         <tr style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}>
           <td
-            colSpan="8"
+            colSpan="7"
             style={{
               padding: "1.25rem 1.5rem",
               borderBottom: "1px solid var(--border)",
