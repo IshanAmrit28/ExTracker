@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useIncomeTracker } from './useIncomeTracker';
 import { Trash2, ArrowDownCircle, RotateCcw, Pencil } from 'lucide-react';
 import { formatDateDisplay } from '../../utils/dateUtils';
@@ -24,6 +25,16 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
     currentMonthKey,
     formatMonthLabel,
   } = useIncomeTracker({ transactions, settings, fetchTransactions });
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  useEffect(() => {
+    if (editingTransaction) setIsFormOpen(true);
+  }, [editingTransaction]);
+
+  const closeIncomeForm = () => {
+    setIsFormOpen(false);
+    cancelEditing();
+  };
 
   // Reimbursement entries — shown separately, NOT counted in income
 
@@ -52,15 +63,28 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
         <p>Log all your credited amounts. Reimbursements from split expenses appear here but are <strong>not counted as income</strong>.</p>
       </header>
 
-      <div className="card" style={{ marginBottom: '2rem' }}>
+      {!isFormOpen && !editingTransaction && (
+        <button type="button" className="btn-success data-entry-trigger" onClick={() => setIsFormOpen(true)}>
+          Add Income
+        </button>
+      )}
+
+      {(isFormOpen || editingTransaction) && (
+      <div className="data-entry-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && closeIncomeForm()}>
+      <div className="card data-entry-modal-card" style={{ marginBottom: '2rem' }} role="dialog" aria-modal="true" aria-labelledby="income-form-title">
         <div className="data-entry-header">
           <div>
-            <h3>{editingTransaction ? 'Edit Income' : 'Add Income'}</h3>
+            <h3 id="income-form-title">{editingTransaction ? 'Edit Income' : 'Add Income'}</h3>
             <p>Enter the credited amount and account details below.</p>
           </div>
-          {editingTransaction && <span className="data-entry-status">Editing</span>}
+          <div className="data-entry-header-actions">
+            {editingTransaction && <span className="data-entry-status">Editing</span>}
+            <button type="button" className="data-entry-close" onClick={closeIncomeForm} aria-label="Close income form">
+              ×
+            </button>
+          </div>
         </div>
-        <form className="data-entry-form" onSubmit={handleSubmit}>
+        <form className="data-entry-form" onSubmit={async (event) => { await handleSubmit(event); setIsFormOpen(false); }}>
           <div className="form-row" style={{ paddingBottom: '0.75rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)' }}>
             <div className="form-group flex-1">
               <label>Date</label>
@@ -133,13 +157,15 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
               {editingTransaction ? 'Save Changes' : 'Add Income'}
             </button>
             {editingTransaction && (
-              <button type="button" className="btn-secondary" onClick={cancelEditing} style={{ marginLeft: '0.75rem', maxWidth: '160px' }}>
+              <button type="button" className="btn-secondary" onClick={closeIncomeForm} style={{ marginLeft: '0.75rem', maxWidth: '160px' }}>
                 Cancel
               </button>
             )}
           </div>
         </form>
       </div>
+      </div>
+      )}
 
       <div className="card">
         {/* Header row: title + month selector + account filter */}

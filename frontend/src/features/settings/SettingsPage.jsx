@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { settingsApi } from '../../services/api';
-import { Trash2, Plus, Check, Crown } from 'lucide-react';
+import { Trash2, Plus, Check, Crown, X } from 'lucide-react';
 
 const ALL_SERVICES = ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer', 'Cash'];
 
 const Setup = ({ settings, fetchSettings, user }) => {
   const [loadingReport, setLoadingReport] = useState(false);
   const [loadingMonthlyReport, setLoadingMonthlyReport] = useState(false);
+  const [isSettingsFormOpen, setIsSettingsFormOpen] = useState(false);
+  const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false);
+  const [isPaymentModeFormOpen, setIsPaymentModeFormOpen] = useState(false);
+  const [isBankFormOpen, setIsBankFormOpen] = useState(false);
   const [formData, setFormData] = useState({
     salary: settings.salary ?? 50000,
     weeklyLimit: settings.weeklyLimit ?? 10000,
@@ -159,6 +163,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
       };
       await settingsApi.update(cleanFormData);
       fetchSettings();
+      setIsSettingsFormOpen(false);
       alert('Settings updated successfully!');
     } catch (err) {
       console.error('Error updating settings:', err);
@@ -194,7 +199,27 @@ const Setup = ({ settings, fetchSettings, user }) => {
       </header>
 
       <div className="card setup-card">
-        <form onSubmit={handleUpdateSettings} className="setup-form">
+        <h3 className="setup-section-title">Budget & Limits</h3>
+        <p className="helper-text" style={{ marginBottom: '1rem' }}>
+          Update your salary, spending limits, and budget distribution.
+        </p>
+        <button type="button" className="btn-primary data-entry-trigger" onClick={() => setIsSettingsFormOpen(true)}>
+          Edit Budget & Limits
+        </button>
+
+        {isSettingsFormOpen && (
+        <div className="data-entry-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsSettingsFormOpen(false)}>
+        <div className="card data-entry-modal-card" role="dialog" aria-modal="true" aria-labelledby="setup-form-title">
+        <div className="data-entry-header">
+          <div>
+            <h3 id="setup-form-title">Edit Budget & Limits</h3>
+            <p>Configure your financial planning values.</p>
+          </div>
+          <button type="button" className="data-entry-close" onClick={() => setIsSettingsFormOpen(false)} aria-label="Close setup form">
+            <X size={18} />
+          </button>
+        </div>
+        <form onSubmit={handleUpdateSettings} className="setup-form data-entry-form">
           <div className="form-row">
             <div className="form-group flex-1">
               <label>Current Base Salary (₹)</label>
@@ -311,8 +336,14 @@ const Setup = ({ settings, fetchSettings, user }) => {
             </p>
           )}
 
-          <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Save Settings</button>
+          <div>
+            <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Save Settings</button>
+            <button type="button" className="btn-secondary" onClick={() => setIsSettingsFormOpen(false)} style={{ width: 'auto', marginLeft: '0.75rem' }}>Cancel</button>
+          </div>
         </form>
+        </div>
+        </div>
+        )}
 
         <h3 className="setup-section-title" style={{ marginTop: '2.5rem' }}>5 Year Salary & Target Projections (10% YoY)</h3>
         <div className="table-responsive">
@@ -397,6 +428,10 @@ const Setup = ({ settings, fetchSettings, user }) => {
         </div>
 
         {/* Add Category Form */}
+        <button type="button" className="btn-primary data-entry-trigger" onClick={() => setIsCategoryFormOpen(true)}>
+          <Plus size={16} /> Add Category
+        </button>
+        {isCategoryFormOpen && <div className="data-entry-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsCategoryFormOpen(false)}><div className="card data-entry-modal-card" role="dialog" aria-modal="true" aria-labelledby="category-form-title"><div className="data-entry-header"><div><h3 id="category-form-title">Add Category</h3><p>Create a category for your transactions.</p></div><button type="button" className="data-entry-close" onClick={() => setIsCategoryFormOpen(false)} aria-label="Close category form"><X size={18} /></button></div>
         <form 
           onSubmit={(e) => {
             e.preventDefault();
@@ -410,6 +445,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
             setFormData(newFormData);
             saveSettingsToBackend(newFormData);
             setNewCategoryName('');
+            setIsCategoryFormOpen(false);
           }}
           style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', maxWidth: '500px' }}
         >
@@ -426,6 +462,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
             Add
           </button>
         </form>
+        </div></div>}
       </div>
 
       <div className="card setup-card" style={{ marginTop: '2rem' }}>
@@ -481,6 +518,10 @@ const Setup = ({ settings, fetchSettings, user }) => {
         </div>
 
         {/* Add Payment Mode Form */}
+        <button type="button" className="btn-primary data-entry-trigger" onClick={() => setIsPaymentModeFormOpen(true)}>
+          <Plus size={16} /> Add Payment Mode
+        </button>
+        {isPaymentModeFormOpen && <div className="data-entry-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsPaymentModeFormOpen(false)}><div className="card data-entry-modal-card" role="dialog" aria-modal="true" aria-labelledby="payment-mode-form-title"><div className="data-entry-header"><div><h3 id="payment-mode-form-title">Add Payment Mode</h3><p>Create a payment method for your accounts.</p></div><button type="button" className="data-entry-close" onClick={() => setIsPaymentModeFormOpen(false)} aria-label="Close payment mode form"><X size={18} /></button></div>
         <form 
           onSubmit={(e) => {
             e.preventDefault();
@@ -494,6 +535,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
             setFormData(newFormData);
             saveSettingsToBackend(newFormData);
             setNewPaymentMode('');
+            setIsPaymentModeFormOpen(false);
           }}
           style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', maxWidth: '500px' }}
         >
@@ -510,6 +552,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
             Add
           </button>
         </form>
+        </div></div>}
       </div>
 
       <div className="card setup-card" style={{ marginTop: '2rem' }}>
@@ -593,8 +636,11 @@ const Setup = ({ settings, fetchSettings, user }) => {
 
         {/* Add New Bank Form */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
-          <h4 style={{ marginTop: 0, marginBottom: '1rem', color: 'var(--text-main)' }}>Add a New Bank Account</h4>
-          <form onSubmit={handleAddBank} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <button type="button" className="btn-primary data-entry-trigger" onClick={() => setIsBankFormOpen(true)}>
+            <Plus size={16} /> Add Bank Account
+          </button>
+          {isBankFormOpen && <div className="data-entry-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsBankFormOpen(false)}><div className="card data-entry-modal-card" role="dialog" aria-modal="true" aria-labelledby="bank-form-title"><div className="data-entry-header"><div><h3 id="bank-form-title">Add Bank Account</h3><p>Connect an account and choose its supported services.</p></div><button type="button" className="data-entry-close" onClick={() => setIsBankFormOpen(false)} aria-label="Close bank form"><X size={18} /></button></div>
+          <form onSubmit={(event) => { handleAddBank(event); setIsBankFormOpen(false); }} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div className="form-group" style={{ maxWidth: '400px' }}>
               <label>Bank Name</label>
               <input
@@ -647,6 +693,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
               <Plus size={16} /> Add Bank Account
             </button>
           </form>
+          </div></div>}
         </div>
       </div>
 

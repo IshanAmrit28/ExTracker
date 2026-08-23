@@ -13,6 +13,7 @@ import {
 import { ReportsPage as ReportsAndDiagnostics } from '../features/reports';
 import { Analytics } from "@vercel/analytics/react";
 import { Menu } from 'lucide-react';
+import InstallPrompt from '../components/InstallPrompt';
 import { useAppData } from '../hooks/useAppData';
 import './App.css';
 
@@ -35,6 +36,7 @@ function App() {
     return (
       <>
         <Auth setToken={setToken} setUser={saveUser} />
+        <InstallPrompt />
         <Analytics />
       </>
     );
@@ -99,6 +101,7 @@ function App() {
         {renderContent()}
       </div>
       <Analytics />
+      <InstallPrompt />
     </div>
   );
 }

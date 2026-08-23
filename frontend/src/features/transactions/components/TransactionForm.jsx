@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { transactionsApi } from "../../../services/api";
-import { Split } from "lucide-react";
+import { Split, X } from "lucide-react";
 import { getLocalDateString } from "../../../utils/dateUtils";
 import DateInput from "../../../components/DateInput";
 import SplitExpensePanel from "./SplitExpensePanel";
@@ -36,6 +36,11 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
   const [numPeople, setNumPeople] = useState("2");
   const [alreadyPaidBack, setAlreadyPaidBack] = useState(false);
   const [members, setMembers] = useState([{ name: "", amount: "" }]);
+  const [isFormOpen, setIsFormOpen] = useState(Boolean(editingTransaction));
+
+  useEffect(() => {
+    if (editingTransaction) setIsFormOpen(true);
+  }, [editingTransaction]);
 
   useEffect(() => {
     if (!settings) return;
@@ -70,6 +75,11 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
   }, [editingTransaction]);
 
   const totalAmountVal = Number(formData.amount) || 0;
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    onCancelEdit?.();
+  };
 
   useEffect(() => {
     if (splitMethod === "equal") {
@@ -174,6 +184,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
 
       if (editingTransaction) {
         await onUpdate(editingTransaction._id, payload);
+        setIsFormOpen(false);
         return;
       }
 
@@ -201,6 +212,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
 
       fetchTransactions();
       onSaved?.(formData.date);
+      setIsFormOpen(false);
       setFormData(buildDefaultFormData(settings));
       setIsSplit(false);
       setSplitMethod("equal");
@@ -227,13 +239,30 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
     ];
 
   return (
-    <div className="card" style={{ marginBottom: "2rem" }}>
+    <>
+      {!editingTransaction && !isFormOpen && (
+        <button
+          type="button"
+          className="btn-primary data-entry-trigger"
+          onClick={() => setIsFormOpen(true)}
+        >
+          Add Transaction
+        </button>
+      )}
+      {(editingTransaction || isFormOpen) && (
+        <div className="data-entry-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && closeForm()}>
+          <div className="card data-entry-modal-card" role="dialog" aria-modal="true" aria-labelledby="transaction-form-title">
       <div className="data-entry-header">
         <div>
-          <h3>{editingTransaction ? "Edit Transaction" : "Add Transaction"}</h3>
+          <h3 id="transaction-form-title">{editingTransaction ? "Edit Transaction" : "Add Transaction"}</h3>
           <p>Enter the transaction details below.</p>
         </div>
-        {editingTransaction && <span className="data-entry-status">Editing</span>}
+        <div className="data-entry-header-actions">
+          {editingTransaction && <span className="data-entry-status">Editing</span>}
+          <button type="button" className="data-entry-close" onClick={closeForm} aria-label="Close transaction form">
+            <X size={18} />
+          </button>
+        </div>
       </div>
       <form className="data-entry-form" onSubmit={handleSubmit}>
         <div
@@ -418,7 +447,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
             <button
               type="button"
               className="btn-secondary"
-              onClick={onCancelEdit}
+              onClick={closeForm}
               style={{ marginLeft: "0.75rem", maxWidth: "160px" }}
             >
               Cancel
@@ -426,7 +455,10 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
           )}
         </div>
       </form>
-    </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

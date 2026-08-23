@@ -234,6 +234,55 @@ body {
   font-size: 0.85rem;
 }
 
+.data-entry-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.data-entry-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.data-entry-close:hover {
+  color: var(--text-main);
+  border-color: var(--primary-color);
+}
+
+.data-entry-trigger {
+  width: auto;
+  margin-bottom: 2rem;
+}
+
+.data-entry-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(5px);
+}
+
+.data-entry-modal-card {
+  width: min(900px, 100%);
+  max-height: calc(100dvh - 2rem);
+  margin: auto !important;
+  overflow-y: auto;
+}
+
 .data-entry-status {
   flex: 0 0 auto;
   padding: 0.3rem 0.65rem;
@@ -513,6 +562,73 @@ select option {
 
 .helper-text { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; }
 
+.install-prompt {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(400px, calc(100vw - 2rem));
+  padding: 0.85rem 0.9rem;
+  background: #18181b;
+  border: 1px solid rgba(249, 115, 22, 0.45);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+}
+
+.install-prompt-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: #fff;
+  background: var(--gradient-primary);
+}
+
+.install-prompt-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.install-prompt-content strong { font-size: 0.9rem; }
+.install-prompt-content span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.install-prompt-action {
+  flex: 0 0 auto;
+  padding: 0.5rem 0.8rem;
+  color: #fff;
+  background: var(--primary-color);
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.install-prompt-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  padding: 0.2rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
 /* Auth Layout */
 .auth-container {
   display: flex;
@@ -788,5 +904,24 @@ select option {
 
   .data-table {
     min-width: 640px;
+  }
+
+  .install-prompt {
+    right: 0.75rem;
+    bottom: 0.75rem;
+    width: calc(100vw - 1.5rem);
+  }
+
+  .data-entry-modal {
+    align-items: flex-start;
+    padding: 0.5rem;
+  }
+
+  .data-entry-modal-card {
+    max-height: calc(100dvh - 1rem);
+  }
+
+  .data-entry-trigger {
+    width: 100%;
   }
 }
