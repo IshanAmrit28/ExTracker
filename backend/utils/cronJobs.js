@@ -174,6 +174,8 @@ const generateAndSendReportForUser = async (user, isAutomatic = false, reference
 const generateAndSendMonthlyReportForUser = async (user, isAutomatic = false, referenceDate = null) => {
   try {
     const allTransactions = await Transaction.find({ userId: user._id });
+    const Settings = require('../models/Settings');
+    const settings = await Settings.findOne({ userId: user._id });
     
     let startOfReport;
     let endOfReport = referenceDate ? new Date(referenceDate) : new Date();
@@ -213,7 +215,11 @@ const generateAndSendMonthlyReportForUser = async (user, isAutomatic = false, re
       }
     });
     
-    const startBalance = preIncome - preExpense;
+    const calculatedStartBalance = preIncome - preExpense;
+    const openingBalance = settings?.monthlyOpeningBalances?.find(
+      (entry) => entry.month === startStr.slice(0, 7),
+    );
+    const startBalance = openingBalance ? openingBalance.balance : calculatedStartBalance;
     
     let weeklyIncome = 0;
     let weeklyNeed = 0;
@@ -239,8 +245,6 @@ const generateAndSendMonthlyReportForUser = async (user, isAutomatic = false, re
       }
     });
     
-    const Settings = require('../models/Settings');
-    const settings = await Settings.findOne({ userId: user._id });
     const userBanks = settings?.banks && settings.banks.length > 0
       ? settings.banks
       : [

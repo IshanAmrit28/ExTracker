@@ -91,3 +91,44 @@ exports.sendMonthlyReport = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.startMonth = async (req, res) => {
+  try {
+    const { month, initialBalance } = req.body;
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month || '')) {
+      return res.status(400).json({ message: 'Provide a valid month in YYYY-MM format.' });
+    }
+
+    const balance = Number(initialBalance);
+    if (!Number.isFinite(balance)) {
+      return res.status(400).json({ message: 'Provide a valid initial balance.' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!process.env.RESEND_API_KEY) {
+      return res.status(400).json({ message: 'RESEND_API_KEY is not configured in the backend environment.' });
+    }
+
+    // Passing the first day of the selected month with automatic mode makes
+    // the report generator target the complete previous calendar month.
+    const reportReferenceDate = new Date(`${month}-01T12:00:00+05:30`);
+    await generateAndSendMonthlyReportForUser(user, true, reportReferenceDate);
+
+    let settings = await Settings.findOne({ userId: req.user.id });
+    if (!settings) settings = new Settings({ userId: req.user.id });
+    const openingBalances = settings.monthlyOpeningBalances || [];
+    const existing = openingBalances.find((entry) => entry.month === month);
+    if (existing) {
+      existing.balance = balance;
+    } else {
+      openingBalances.push({ month, balance });
+    }
+    settings.monthlyOpeningBalances = openingBalances;
+    await settings.save();
+
+    res.json({ message: `Previous month's report sent and ${month} started successfully.`, month, initialBalance: balance });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

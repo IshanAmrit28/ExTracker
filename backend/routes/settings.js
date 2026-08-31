@@ -19,4 +19,8 @@ router.post('/send-weekly-report', auth, settingsController.sendWeeklyReport);
 // @desc    Manually generate and send monthly report PDF
 router.post('/send-monthly-report', auth, settingsController.sendMonthlyReport);
 
+// @route   POST /api/settings/start-month
+// @desc    Email the previous month's report and save the new opening balance
+router.post('/start-month', auth, settingsController.startMonth);
+
 module.exports = router;

@@ -11,6 +11,10 @@ const Setup = ({ settings, fetchSettings, user }) => {
   const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false);
   const [isPaymentModeFormOpen, setIsPaymentModeFormOpen] = useState(false);
   const [isBankFormOpen, setIsBankFormOpen] = useState(false);
+  const [isMonthStartOpen, setIsMonthStartOpen] = useState(false);
+  const [monthToStart, setMonthToStart] = useState(new Date().toISOString().slice(0, 7));
+  const [initialBalance, setInitialBalance] = useState('');
+  const [startingMonth, setStartingMonth] = useState(false);
   const [formData, setFormData] = useState({
     salary: settings.salary ?? 50000,
     weeklyLimit: settings.weeklyLimit ?? 10000,
@@ -142,6 +146,22 @@ const Setup = ({ settings, fetchSettings, user }) => {
     window.dispatchEvent(new Event('extracker:install'));
   };
 
+  const handleStartMonth = async (event) => {
+    event.preventDefault();
+    setStartingMonth(true);
+    try {
+      const response = await settingsApi.startMonth(monthToStart, Number(initialBalance) || 0);
+      fetchSettings();
+      setIsMonthStartOpen(false);
+      alert(response.data.message || 'Previous month report sent and new month started.');
+    } catch (err) {
+      console.error('Error starting month:', err);
+      alert(err.response?.data?.message || 'Unable to start the month.');
+    } finally {
+      setStartingMonth(false);
+    }
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -205,6 +225,46 @@ const Setup = ({ settings, fetchSettings, user }) => {
       <button type="button" className="btn-secondary setup-install-button" onClick={handleInstallApplication}>
         <Download size={17} /> Install ExTracker as an application
       </button>
+
+      <button type="button" className="btn-primary setup-install-button" onClick={() => setIsMonthStartOpen(true)}>
+        Start New Month
+      </button>
+
+      {isMonthStartOpen && (
+        <div className="data-entry-modal" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setIsMonthStartOpen(false)}>
+          <div className="card data-entry-modal-card" role="dialog" aria-modal="true" aria-labelledby="month-start-title">
+            <div className="data-entry-header">
+              <div>
+                <h3 id="month-start-title">Start New Month</h3>
+                <p>Your complete previous-month report will be emailed as a PDF before the new balance is saved.</p>
+              </div>
+              <button type="button" className="data-entry-close" onClick={() => setIsMonthStartOpen(false)} aria-label="Close start month form">
+                <X size={18} />
+              </button>
+            </div>
+            <form className="data-entry-form" onSubmit={handleStartMonth}>
+              <div className="form-row">
+                <div className="form-group flex-1">
+                  <label htmlFor="month-to-start">Month to start</label>
+                  <input id="month-to-start" type="month" value={monthToStart} onChange={(event) => setMonthToStart(event.target.value)} required />
+                </div>
+                <div className="form-group flex-1">
+                  <label htmlFor="initial-balance">Initial balance (₹)</label>
+                  <input id="initial-balance" type="number" inputMode="decimal" step="0.01" value={initialBalance} onChange={(event) => setInitialBalance(event.target.value)} placeholder="0.00" required />
+                </div>
+              </div>
+              <div>
+                <button type="submit" className="btn-primary" disabled={startingMonth} style={{ width: 'auto' }}>
+                  {startingMonth ? 'Sending report...' : 'Send Report & Start Month'}
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => setIsMonthStartOpen(false)} style={{ width: 'auto', marginLeft: '0.75rem' }}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="card setup-card">
         <h3 className="setup-section-title">Budget & Limits</h3>

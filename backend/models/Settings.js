@@ -81,7 +81,11 @@ const settingsSchema = new mongoose.Schema({
       { name: 'HDFC Bank', services: ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer'] },
       { name: 'SBI Bank', services: ['UPI', 'Debit Card', 'Bank Transfer'] }
     ]
-  }
+  },
+  monthlyOpeningBalances: [{
+    month: { type: String, required: true },
+    balance: { type: Number, required: true, default: 0 }
+  }]
 }, { 
   timestamps: true,
   toJSON: { getters: true },
