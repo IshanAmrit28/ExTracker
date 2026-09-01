@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { getExpenseShare, isExpense } from '../../../utils/finance/transactions';
+import { getExpenseShare, isPersonalExpense } from '../../../utils/finance/transactions';
 
 const WeeklyAnalysis = ({ transactions, settings }) => {
   const [filterMode, setFilterMode] = useState('All');
@@ -10,7 +10,7 @@ const WeeklyAnalysis = ({ transactions, settings }) => {
     const weeks = {};
     
     transactions.forEach(t => {
-      if (!isExpense(t)) return;
+      if (!isPersonalExpense(t)) return;
       if (filterMode !== 'All' && t.category !== filterMode) return;
       
       const tBank = t.bank || '';

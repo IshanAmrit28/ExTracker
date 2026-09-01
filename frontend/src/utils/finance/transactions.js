@@ -3,6 +3,12 @@ export const EXPENSE_TYPES = ["Need", "Want", "expense"];
 export const isExpense = (transaction) =>
   EXPENSE_TYPES.includes(transaction?.type);
 
+// Rent is a fixed household obligation, so it is excluded from personal-use
+// spending and the weekly/monthly discretionary limits.
+export const isPersonalExpense = (transaction) =>
+  isExpense(transaction) &&
+  String(transaction?.category || "").trim().toLowerCase() !== "rent";
+
 export const isIncome = (transaction) =>
   ["Income", "income"].includes(transaction?.type);
 

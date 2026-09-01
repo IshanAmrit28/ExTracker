@@ -1,15 +1,15 @@
 import { Activity, Target, Wallet, TrendingDown, Landmark, PieChart, Receipt } from 'lucide-react';
 import { getCurrentMonthKey, getMonthKey } from '../../utils/finance/dates';
-import { getExpenseShare, isExpense, isIncome } from '../../utils/finance/transactions';
+import { getExpenseShare, isExpense, isIncome, isPersonalExpense } from '../../utils/finance/transactions';
 
 const Dashboard = ({ transactions, settings }) => {
   const currentMonth = getCurrentMonthKey();
   const thisMonthTx = transactions.filter(t => getMonthKey(t.date) === currentMonth);
   const currentOpeningBalances = settings?.monthlyOpeningBalances?.find(entry => entry.month === currentMonth);
 
-  const actualNeed = thisMonthTx.filter(t => t.type === 'Need' || t.type === 'expense').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
-  const actualWant = thisMonthTx.filter(t => t.type === 'Want').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
-  const actualSaving = thisMonthTx.filter(t => t.type === 'Saving').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
+  const actualNeed = thisMonthTx.filter(t => isPersonalExpense(t) && (t.type === 'Need' || t.type === 'expense')).reduce((acc, curr) => acc + getExpenseShare(curr), 0);
+  const actualWant = thisMonthTx.filter(t => isPersonalExpense(t) && t.type === 'Want').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
+  const actualSaving = thisMonthTx.filter(t => isPersonalExpense(t) && t.type === 'Saving').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
 
   const totalCreditedThisMonth = thisMonthTx.filter(isIncome).reduce((acc, curr) => acc + curr.amount, 0);
   const totalSpentThisMonth = actualNeed + actualWant;

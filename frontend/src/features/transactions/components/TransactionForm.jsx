@@ -37,6 +37,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
   const [alreadyPaidBack, setAlreadyPaidBack] = useState(false);
   const [members, setMembers] = useState([{ name: "", amount: "" }]);
   const [isFormOpen, setIsFormOpen] = useState(Boolean(editingTransaction));
+  const isInflow = formData.type === "Income";
 
   useEffect(() => {
     if (editingTransaction) setIsFormOpen(true);
@@ -64,7 +65,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
       date: String(editingTransaction.date || "").slice(0, 10),
       notes: editingTransaction.notes || "",
     });
-    setIsSplit(Boolean(editingTransaction.isSplit));
+    setIsSplit(Boolean(editingTransaction.isSplit) && editingTransaction.type !== "Income");
     setSplitMethod(editingTransaction.splitMethod || "equal");
     setNumPeople(String((editingTransaction.splitMembers?.length || 1) + 1));
     setMembers((editingTransaction.splitMembers || []).map((member) => ({
@@ -296,7 +297,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
           </div>
 
           <div className="form-group flex-1">
-            <label>{isSplit ? "Total Paid (₹)" : "Amount (₹)"}</label>
+            <label>{isInflow ? "Inflow Amount (₹)" : isSplit ? "Total Paid (₹)" : "Outflow Amount (₹)"}</label>
             <input
               type="text"
               inputMode="decimal"
@@ -315,6 +316,24 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
         </div>
 
         <div className="form-row">
+          <div className="form-group flex-1">
+            <label>Transaction Direction</label>
+            <select
+              name="type"
+              value={formData.type}
+              onChange={(event) => {
+                handleChange(event);
+                if (event.target.value === "Income") setIsSplit(false);
+              }}
+              required
+            >
+              <option value="Income">Inflow (Money In)</option>
+              <option value="Need">Outflow — Need</option>
+              <option value="Want">Outflow — Want</option>
+              <option value="Saving">Outflow — Saving</option>
+            </select>
+          </div>
+
           <div className="form-group flex-1">
             <label>Category</label>
             <select
@@ -364,7 +383,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
 
         </div>
 
-        <div
+        {!isInflow && <div
           style={{
             marginTop: "1rem",
             paddingTop: "1rem",
@@ -433,7 +452,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
               parseNumberOnBlur={parseNumberOnBlur}
             />
           )}
-        </div>
+        </div>}
 
         <div style={{ marginTop: "1.25rem" }}>
           <button
@@ -456,7 +475,7 @@ const TransactionForm = ({ settings, fetchTransactions, editingTransaction, onUp
         </div>
       </form>
           </div>
-        </div>
+          </div>
       )}
     </>
   );

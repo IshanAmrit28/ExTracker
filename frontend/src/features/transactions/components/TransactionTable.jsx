@@ -129,6 +129,7 @@ const TransactionTable = ({
               aria-label="Transaction view"
             >
               <option value="overall">Overall Transactions</option>
+              <option value="incoming">Incoming Only</option>
               <option value="outgoing">Outgoing Only</option>
             </select>
           </div>

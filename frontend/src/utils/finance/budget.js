@@ -1,5 +1,5 @@
 import { getCurrentMonthKey, getDateKey, getMonthKey } from "./dates";
-import { getExpenseShare, isExpense } from "./transactions";
+import { getExpenseShare, isPersonalExpense } from "./transactions";
 
 export const calculateSmartBudget = ({
   transactions = [],
@@ -19,7 +19,7 @@ export const calculateSmartBudget = ({
   const todayKey = getDateKey(now);
   const monthExpenses = transactions.filter(
     (transaction) =>
-      isExpense(transaction) && getMonthKey(transaction.date) === currentMonthKey,
+      isPersonalExpense(transaction) && getMonthKey(transaction.date) === currentMonthKey,
   );
   const spentToday = monthExpenses
     .filter((transaction) => getDateKey(transaction.date) === todayKey)

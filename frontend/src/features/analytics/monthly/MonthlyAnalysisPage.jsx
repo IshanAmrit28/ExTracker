@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatMonthLabel, getCurrentMonthKey, getMonthKey } from '../../../utils/finance/dates';
-import { getExpenseShare, isExpense } from '../../../utils/finance/transactions';
+import { getExpenseShare, isPersonalExpense } from '../../../utils/finance/transactions';
 
 const COLORS = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899', '#f59e0b', '#06b6d4'];
 
@@ -34,7 +34,7 @@ const MonthlyAnalysis = ({ transactions, settings }) => {
     // Pie Data (excluding savings & income)
     const expensesByCategory = {};
     let total = 0;
-    tx.filter(isExpense).forEach(t => {
+    tx.filter(isPersonalExpense).forEach(t => {
       const expAmt = getExpenseShare(t);
       expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + expAmt;
       total += expAmt;

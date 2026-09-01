@@ -5,6 +5,7 @@ import SmartBudgetWidget from "./components/SmartBudgetWidget";
 import TransactionTable from "./components/TransactionTable";
 import { getMonthKey, getCurrentMonthKey } from "./components/utils";
 import { getLocalDateString } from "../../utils/dateUtils";
+import { isPersonalExpense } from "../../utils/finance/transactions";
 
 const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
   const [filterBank, setFilterBank] = useState("All");
@@ -38,6 +39,9 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
         ) {
           return false;
         }
+        if (transactionView === "incoming" && tx.type !== "Income") {
+          return false;
+        }
         const matchMonth = getMonthKey(tx.date) === selectedMonth;
         const matchBank =
           filterBank === "All" ||
@@ -62,7 +66,7 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
   const totalOutflow = useMemo(
     () =>
       filteredTransactions
-        .filter((tx) => ["Need", "Want", "Saving", "expense"].includes(tx.type))
+        .filter(isPersonalExpense)
         .reduce(
           (sum, tx) =>
             sum + (tx.isSplit && tx.myShare != null ? tx.myShare : tx.amount),
@@ -167,8 +171,8 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
   return (
     <div className="fade-in">
       <header className="page-header">
-        <h2>Daily Expense Tracker</h2>
-        <p>Log your daily activities. Choose your category, type, and bank account details.</p>
+        <h2>Transaction Recorder</h2>
+        <p>Record money coming in or going out from the same page by selecting the transaction direction.</p>
       </header>
 
       <SmartBudgetWidget transactions={transactions} settings={settings} />

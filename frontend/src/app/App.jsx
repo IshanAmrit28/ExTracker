@@ -4,7 +4,6 @@ import { AuthPage as Auth } from '../features/auth';
 import { DashboardPage as Dashboard } from '../features/dashboard';
 import { SettingsPage as Setup } from '../features/settings';
 import { DailyTrackerPage as DailyTracker } from '../features/transactions';
-import { IncomeTrackerPage as IncomeTracker } from '../features/income';
 import {
   MonthlyAnalysisPage as MonthlyAnalysis,
   WeeklyAnalysisPage as WeeklyAnalysis,
@@ -59,8 +58,6 @@ function App() {
         return <Dashboard transactions={transactions} settings={settings} />;
       case 'dailyTracker':
         return <DailyTracker transactions={transactions} settings={settings} fetchTransactions={fetchTransactions} />;
-      case 'incomeTracker':
-        return <IncomeTracker transactions={transactions} settings={settings} fetchTransactions={fetchTransactions} />;
       case 'monthlyAnalysis':
         return <MonthlyAnalysis transactions={transactions} settings={settings} />;
       case 'weeklyAnalysis':

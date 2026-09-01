@@ -1,4 +1,4 @@
-import { LayoutDashboard, Receipt, BarChart3, PieChart, CalendarDays, Settings, LogOut, Banknote, X, FileBarChart } from 'lucide-react';
+import { LayoutDashboard, Receipt, BarChart3, PieChart, CalendarDays, Settings, LogOut, X, FileBarChart } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, handleLogout, isOpen, setIsOpen, user }) => {
   return (
@@ -20,10 +20,6 @@ const Sidebar = ({ activeTab, setActiveTab, handleLogout, isOpen, setIsOpen, use
         <button className={`nav-item ${activeTab === 'dailyTracker' ? 'active' : ''}`} onClick={() => setActiveTab('dailyTracker')}>
           <Receipt size={20} />
           <span>Daily Tracker</span>
-        </button>
-        <button className={`nav-item ${activeTab === 'incomeTracker' ? 'active' : ''}`} onClick={() => setActiveTab('incomeTracker')}>
-          <Banknote size={20} />
-          <span>Income Tracker</span>
         </button>
         <button className={`nav-item ${activeTab === 'weeklyAnalysis' ? 'active' : ''}`} onClick={() => setActiveTab('weeklyAnalysis')}>
           <BarChart3 size={20} />
