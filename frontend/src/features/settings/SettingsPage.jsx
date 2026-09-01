@@ -13,7 +13,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
   const [isBankFormOpen, setIsBankFormOpen] = useState(false);
   const [isMonthStartOpen, setIsMonthStartOpen] = useState(false);
   const [monthToStart, setMonthToStart] = useState(new Date().toISOString().slice(0, 7));
-  const [initialBalance, setInitialBalance] = useState('');
+  const [initialBalances, setInitialBalances] = useState({});
   const [startingMonth, setStartingMonth] = useState(false);
   const [formData, setFormData] = useState({
     salary: settings.salary ?? 50000,
@@ -150,7 +150,11 @@ const Setup = ({ settings, fetchSettings, user }) => {
     event.preventDefault();
     setStartingMonth(true);
     try {
-      const response = await settingsApi.startMonth(monthToStart, Number(initialBalance) || 0);
+      const bankBalances = (settings.banks || []).map((bank) => ({
+        bank: bank.name,
+        balance: Number(initialBalances[bank.name]) || 0
+      }));
+      const response = await settingsApi.startMonth(monthToStart, bankBalances);
       fetchSettings();
       setIsMonthStartOpen(false);
       alert(response.data.message || 'Previous month report sent and new month started.');
@@ -249,8 +253,24 @@ const Setup = ({ settings, fetchSettings, user }) => {
                   <input id="month-to-start" type="month" value={monthToStart} onChange={(event) => setMonthToStart(event.target.value)} required />
                 </div>
                 <div className="form-group flex-1">
-                  <label htmlFor="initial-balance">Initial balance (₹)</label>
-                  <input id="initial-balance" type="number" inputMode="decimal" step="0.01" value={initialBalance} onChange={(event) => setInitialBalance(event.target.value)} placeholder="0.00" required />
+                  <label>Initial balance by bank (₹)</label>
+                  <div style={{ display: 'grid', gap: '0.6rem' }}>
+                    {(settings.banks || []).map((bank) => (
+                      <div key={bank.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ minWidth: '120px', fontSize: '0.85rem' }}>{bank.name}</span>
+                        <input
+                          aria-label={`Initial balance for ${bank.name}`}
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          value={initialBalances[bank.name] ?? ''}
+                          onChange={(event) => setInitialBalances((previous) => ({ ...previous, [bank.name]: event.target.value }))}
+                          placeholder="0.00"
+                          required
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div>

@@ -5,6 +5,7 @@ import { getExpenseShare, isExpense, isIncome } from '../../utils/finance/transa
 const Dashboard = ({ transactions, settings }) => {
   const currentMonth = getCurrentMonthKey();
   const thisMonthTx = transactions.filter(t => getMonthKey(t.date) === currentMonth);
+  const currentOpeningBalances = settings?.monthlyOpeningBalances?.find(entry => entry.month === currentMonth);
 
   const actualNeed = thisMonthTx.filter(t => t.type === 'Need' || t.type === 'expense').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
   const actualWant = thisMonthTx.filter(t => t.type === 'Want').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
@@ -193,11 +194,17 @@ const Dashboard = ({ transactions, settings }) => {
         const bankBalances = {};
         if (settings?.banks) {
           settings.banks.forEach(b => {
-            bankBalances[b.name] = { name: b.name, credited: 0, spent: 0, balance: 0 };
+            const configuredOpening = currentOpeningBalances?.bankBalances?.find(entry => entry.bank === b.name);
+            bankBalances[b.name] = {
+              name: b.name,
+              credited: 0,
+              spent: 0,
+              balance: configuredOpening ? configuredOpening.balance : (currentOpeningBalances?.bankBalances ? 0 : (currentOpeningBalances?.balance || 0) / settings.banks.length)
+            };
           });
         }
         
-        transactions.forEach(t => {
+        thisMonthTx.forEach(t => {
           const tBank = t.bank || '';
           if (!(tBank in bankBalances)) {
             bankBalances[tBank] = { name: tBank, credited: 0, spent: 0, balance: 0 };

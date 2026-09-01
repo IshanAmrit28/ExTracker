@@ -84,7 +84,11 @@ const settingsSchema = new mongoose.Schema({
   },
   monthlyOpeningBalances: [{
     month: { type: String, required: true },
-    balance: { type: Number, required: true, default: 0 }
+    balance: { type: Number, required: true, default: 0 },
+    bankBalances: [{
+      bank: { type: String, required: true },
+      balance: { type: Number, required: true, default: 0 }
+    }]
   }]
 }, { 
   timestamps: true,

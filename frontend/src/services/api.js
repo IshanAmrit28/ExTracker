@@ -36,8 +36,8 @@ export const settingsApi = {
   update: (settings) => apiClient.post("/settings", settings),
   sendWeeklyReport: () => apiClient.post("/settings/send-weekly-report"),
   sendMonthlyReport: () => apiClient.post("/settings/send-monthly-report"),
-  startMonth: (month, initialBalance) =>
-    apiClient.post("/settings/start-month", { month, initialBalance }),
+  startMonth: (month, bankBalances) =>
+    apiClient.post("/settings/start-month", { month, bankBalances }),
 };
 
 export const reportsApi = {
