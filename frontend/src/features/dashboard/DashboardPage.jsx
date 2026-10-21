@@ -1,6 +1,6 @@
 import { Activity, Target, Wallet, TrendingDown, Landmark, PieChart, Receipt } from 'lucide-react';
 import { getCurrentMonthKey, getMonthKey } from '../../utils/finance/dates';
-import { getExpenseShare, isExpense, isIncome, isPersonalExpense } from '../../utils/finance/transactions';
+import { getExpenseShare, isIncome, isPersonalExpense } from '../../utils/finance/transactions';
 
 const Dashboard = ({ transactions, settings }) => {
   const currentMonth = getCurrentMonthKey();
@@ -21,20 +21,79 @@ const Dashboard = ({ transactions, settings }) => {
     ? Math.round((budgetLeftThisMonth / monthlyBudget) * 100)
     : 0;
 
-  const totalAllTimeCredited = transactions.filter(isIncome).reduce((acc, curr) => acc + curr.amount, 0);
-  const totalAllTimeSpent = transactions.filter(isExpense).reduce((acc, curr) => acc + getExpenseShare(curr), 0);
-  const overallLeft = totalAllTimeCredited - totalAllTimeSpent;
+  // Bank Account & Wallet Balances calculation
+  const bankBalances = {};
+  if (settings?.banks) {
+    settings.banks.forEach(b => {
+      const configuredOpening = currentOpeningBalances?.bankBalances?.find(
+        entry => String(entry.bank || '').trim().toLowerCase() === String(b.name || '').trim().toLowerCase()
+      );
+      const opening = configuredOpening 
+        ? configuredOpening.balance 
+        : (currentOpeningBalances?.bankBalances?.length ? 0 : (currentOpeningBalances?.balance || 0) / (settings.banks.length || 1));
+      
+      bankBalances[b.name] = {
+        name: b.name,
+        opening: Number(opening) || 0,
+        credited: 0,
+        spent: 0,
+        balance: Number(opening) || 0
+      };
+    });
+  }
+
+  thisMonthTx.forEach(t => {
+    const rawBank = String(t.bank || '').trim();
+    const matchedBank = settings?.banks?.find(b => {
+      const bLower = String(b.name || '').trim().toLowerCase();
+      const tLower = rawBank.toLowerCase();
+      if (bLower === tLower) return true;
+      if (
+        (bLower === 'cash' || bLower === 'cash / wallet' || bLower === 'wallet') &&
+        (tLower === 'cash' || tLower === 'cash / wallet' || tLower === 'wallet')
+      ) {
+        return true;
+      }
+      return false;
+    });
+
+    const targetBankName = matchedBank ? matchedBank.name : (rawBank || 'Cash / Wallet');
+    if (!(targetBankName in bankBalances)) {
+      bankBalances[targetBankName] = { name: targetBankName, opening: 0, credited: 0, spent: 0, balance: 0 };
+    }
+
+    if (t.type === 'Income' || t.type === 'income' || t.type === 'Reimbursement') {
+      bankBalances[targetBankName].credited += t.amount;
+      bankBalances[targetBankName].balance += t.amount;
+    } else if (['Need', 'Want', 'Saving', 'expense'].includes(t.type)) {
+      bankBalances[targetBankName].spent += t.amount;
+      bankBalances[targetBankName].balance -= t.amount;
+    }
+  });
+
+  const activeBankNames = settings?.banks?.length > 0 
+    ? settings.banks.map(b => b.name) 
+    : [];
+  const bankList = Object.values(bankBalances).filter(b => activeBankNames.includes(b.name));
+  const unconfiguredActiveBanks = Object.values(bankBalances).filter(
+    b => !activeBankNames.includes(b.name) && (b.credited !== 0 || b.spent !== 0 || b.balance !== 0)
+  );
+  const displayBankList = [...bankList, ...unconfiguredActiveBanks];
+
+  // Total Overall Balance: exact sum across all bank accounts and wallets
+  const totalOverallBalance = displayBankList.reduce((acc, b) => acc + b.balance, 0);
 
   // Outstanding Reimbursements total across all pending/partial split transactions
   const totalOutstandingReimbursements = transactions
     .filter(t => t.isSplit && t.reimbursementStatus !== 'Completed')
     .reduce((acc, curr) => acc + Math.max(0, (curr.recoverableAmount || 0) - (curr.reimbursedAmount || 0)), 0);
 
-  const salary = totalCreditedThisMonth > 0 ? totalCreditedThisMonth : (settings.salary || 0);
+  // Salary for Budget vs Actual is strictly based on manual setup salary
+  const salary = Number(settings?.salary) || 0;
   
-  const needP = (settings.needsPercentage || 50) / 100;
-  const wantP = (settings.wantsPercentage || 30) / 100;
-  const saveP = (settings.savingsPercentage || 20) / 100;
+  const needP = (settings?.needsPercentage || 50) / 100;
+  const wantP = (settings?.wantsPercentage || 30) / 100;
+  const saveP = (settings?.savingsPercentage || 20) / 100;
 
   const budgetNeed = Math.floor(salary * needP);
   const budgetWant = Math.floor(salary * wantP);
@@ -110,7 +169,7 @@ const Dashboard = ({ transactions, settings }) => {
               <Landmark size={22} />
             </div>
             <div className="stat-value" style={{ color: '#8b5cf6' }}>
-              ₹{overallLeft.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹{totalOverallBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="stat-label">Total Overall Balance</div>
           </div>
@@ -190,95 +249,68 @@ const Dashboard = ({ transactions, settings }) => {
       </div>
 
       {/* Bank Account Balances Grid */}
-      {(() => {
-        const bankBalances = {};
-        if (settings?.banks) {
-          settings.banks.forEach(b => {
-            const configuredOpening = currentOpeningBalances?.bankBalances?.find(entry => entry.bank === b.name);
-            bankBalances[b.name] = {
-              name: b.name,
-              credited: 0,
-              spent: 0,
-              balance: configuredOpening ? configuredOpening.balance : (currentOpeningBalances?.bankBalances ? 0 : (currentOpeningBalances?.balance || 0) / settings.banks.length)
-            };
-          });
-        }
-        
-        thisMonthTx.forEach(t => {
-          const tBank = t.bank || '';
-          if (!(tBank in bankBalances)) {
-            bankBalances[tBank] = { name: tBank, credited: 0, spent: 0, balance: 0 };
-          }
-          
-          if (t.type === 'Income' || t.type === 'Reimbursement') {
-            bankBalances[tBank].credited += t.amount;
-            bankBalances[tBank].balance += t.amount;
-          } else if (['Need', 'Want', 'expense'].includes(t.type)) {
-            bankBalances[tBank].spent += t.amount;
-            bankBalances[tBank].balance -= t.amount;
-          }
-        });
-
-        const activeBankNames = settings?.banks?.length > 0 
-          ? settings.banks.map(b => b.name) 
-          : [];
-        const bankList = Object.values(bankBalances).filter(b => activeBankNames.includes(b.name));
-
-        return (
-          <div className="card" style={{ marginTop: '2rem' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-main)' }}>
-              <Landmark color="var(--primary-color)" size={20} /> Bank Account & Wallet Balances
-            </h3>
-            <p className="helper-text" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-              Real-time balance aggregations computed directly across all transaction history logged per bank profile.
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-              {bankList.map((b, idx) => {
-                const isPositive = b.balance >= 0;
-                return (
-                  <div 
-                    key={idx} 
-                    style={{ 
-                      padding: '1.5rem', 
-                      backgroundColor: 'rgba(255, 255, 255, 0.015)', 
-                      border: '1px solid var(--border)', 
-                      borderTop: `3px solid ${isPositive ? '#22c55e' : '#ef4444'}`,
-                      borderRadius: '12px',
-                      transition: 'transform 0.2s',
-                      cursor: 'default'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.05rem' }}>{b.name}</h4>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', padding: '3px 8px', borderRadius: '100px', backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', fontWeight: 'bold' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }}></span> Linked
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Credited (Inflow):</span>
-                        <span style={{ color: '#22c55e', fontWeight: 'bold' }}>+₹{b.credited.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Spent (Outflow):</span>
-                        <span style={{ color: '#ef4444', fontWeight: 'bold' }}>-₹{b.spent.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                      </div>
-                    </div>
-                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 'bold' }}>Net Balance:</span>
-                      <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: isPositive ? '#22c55e' : '#ef4444' }}>
-                        ₹{b.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
+      <div className="card" style={{ marginTop: '2rem' }}>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+          <Landmark color="var(--primary-color)" size={20} /> Bank Account & Wallet Balances
+        </h3>
+        <p className="helper-text" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          Real-time balance aggregations computed directly across all transaction history logged per bank profile.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          {displayBankList.map((b, idx) => {
+            const isPositive = b.balance >= 0;
+            return (
+              <div 
+                key={idx} 
+                style={{ 
+                  padding: '1.5rem', 
+                  backgroundColor: 'rgba(255, 255, 255, 0.015)', 
+                  border: '1px solid var(--border)', 
+                  borderTop: `3px solid ${isPositive ? '#22c55e' : '#ef4444'}`,
+                  borderRadius: '12px',
+                  transition: 'transform 0.2s',
+                  cursor: 'default'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.05rem' }}>{b.name}</h4>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', padding: '3px 8px', borderRadius: '100px', backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', fontWeight: 'bold' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e' }}></span> Linked
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Opening Balance:</span>
+                    <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>
+                      ₹{b.opening.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })()}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Credited (Inflow):</span>
+                    <span style={{ color: '#22c55e', fontWeight: 'bold' }}>
+                      +₹{b.credited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Spent (Outflow):</span>
+                    <span style={{ color: '#ef4444', fontWeight: 'bold' }}>
+                      -₹{b.spent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.8rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 'bold' }}>Net Balance:</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: isPositive ? '#22c55e' : '#ef4444' }}>
+                    ₹{b.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
