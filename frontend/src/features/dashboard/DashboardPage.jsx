@@ -1,11 +1,10 @@
 import { Activity, Target, Wallet, TrendingDown, Landmark, PieChart, Receipt } from 'lucide-react';
 import { getCurrentMonthKey, getMonthKey } from '../../utils/finance/dates';
-import { getExpenseShare, isIncome, isPersonalExpense } from '../../utils/finance/transactions';
+import { getExpenseShare, isExpense, isIncome, isPersonalExpense } from '../../utils/finance/transactions';
 
 const Dashboard = ({ transactions, settings }) => {
   const currentMonth = getCurrentMonthKey();
   const thisMonthTx = transactions.filter(t => getMonthKey(t.date) === currentMonth);
-  const currentOpeningBalances = settings?.monthlyOpeningBalances?.find(entry => entry.month === currentMonth);
 
   const actualNeed = thisMonthTx.filter(t => isPersonalExpense(t) && (t.type === 'Need' || t.type === 'expense')).reduce((acc, curr) => acc + getExpenseShare(curr), 0);
   const actualWant = thisMonthTx.filter(t => isPersonalExpense(t) && t.type === 'Want').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
@@ -21,28 +20,23 @@ const Dashboard = ({ transactions, settings }) => {
     ? Math.round((budgetLeftThisMonth / monthlyBudget) * 100)
     : 0;
 
-  // Bank Account & Wallet Balances calculation
+  // Bank Account & Wallet Balances calculation directly across transaction history
   const bankBalances = {};
   if (settings?.banks) {
     settings.banks.forEach(b => {
-      const configuredOpening = currentOpeningBalances?.bankBalances?.find(
-        entry => String(entry.bank || '').trim().toLowerCase() === String(b.name || '').trim().toLowerCase()
-      );
-      const opening = configuredOpening 
-        ? configuredOpening.balance 
-        : (currentOpeningBalances?.bankBalances?.length ? 0 : (currentOpeningBalances?.balance || 0) / (settings.banks.length || 1));
-      
       bankBalances[b.name] = {
         name: b.name,
-        opening: Number(opening) || 0,
         credited: 0,
         spent: 0,
-        balance: Number(opening) || 0
+        balance: 0
       };
     });
   }
 
-  thisMonthTx.forEach(t => {
+  transactions.forEach(t => {
+    // Reimbursements are paybacks for split expenses, not new income, so exclude to avoid counting extra
+    if (t.type === 'Reimbursement' || t.category === 'Reimbursement') return;
+
     const rawBank = String(t.bank || '').trim();
     const matchedBank = settings?.banks?.find(b => {
       const bLower = String(b.name || '').trim().toLowerCase();
@@ -59,13 +53,17 @@ const Dashboard = ({ transactions, settings }) => {
 
     const targetBankName = matchedBank ? matchedBank.name : (rawBank || 'Cash / Wallet');
     if (!(targetBankName in bankBalances)) {
-      bankBalances[targetBankName] = { name: targetBankName, opening: 0, credited: 0, spent: 0, balance: 0 };
+      bankBalances[targetBankName] = { name: targetBankName, credited: 0, spent: 0, balance: 0 };
     }
 
-    if (t.type === 'Income' || t.type === 'income' || t.type === 'Reimbursement') {
+    if (isIncome(t)) {
       bankBalances[targetBankName].credited += t.amount;
       bankBalances[targetBankName].balance += t.amount;
-    } else if (['Need', 'Want', 'Saving', 'expense'].includes(t.type)) {
+    } else if (isExpense(t)) {
+      const share = getExpenseShare(t);
+      bankBalances[targetBankName].spent += share;
+      bankBalances[targetBankName].balance -= share;
+    } else if (t.type === 'Saving') {
       bankBalances[targetBankName].spent += t.amount;
       bankBalances[targetBankName].balance -= t.amount;
     }
@@ -281,12 +279,6 @@ const Dashboard = ({ transactions, settings }) => {
                   </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Opening Balance:</span>
-                    <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>
-                      ₹{b.opening.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </span>
-                  </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                     <span style={{ color: 'var(--text-muted)' }}>Credited (Inflow):</span>
                     <span style={{ color: '#22c55e', fontWeight: 'bold' }}>
