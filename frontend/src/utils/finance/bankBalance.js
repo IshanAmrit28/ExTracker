@@ -34,6 +34,14 @@ const resolveBankName = (transactionBank, banks) => {
   return configuredBank?.name || rawBank || 'Cash / Wallet';
 };
 
+const entryDate = (entry) =>
+  String(entry?.date || (entry?.month ? `${entry.month}-01` : '')).slice(0, 10);
+
+const todayKey = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
 /**
  * Calculates actual cash movement from persisted transactions.
  *
@@ -51,13 +59,13 @@ export const calculateBankBalances = (
   banks = [],
   openingBalances = [],
 ) => {
-  // The first saved opening amount is the baseline before the user's tracked
-  // history. Later month-start entries are historical snapshots and must not
-  // be added on top of the same transaction history.
+  // Use the latest opening date that is not in the future. This lets a user
+  // correct the tracking start date later without adding multiple baselines.
   const sortedOpenings = [...openingBalances]
     .filter((entry) => entry?.month)
-    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
-  const openingEntry = sortedOpenings[0];
+    .sort((a, b) => entryDate(b).localeCompare(entryDate(a)));
+  const openingEntry = sortedOpenings.find((entry) => entryDate(entry) <= todayKey());
+  const openingDate = openingEntry ? entryDate(openingEntry) : '';
 
   const balances = {};
 
@@ -90,9 +98,26 @@ export const calculateBankBalances = (
   });
 
   transactions.forEach((transaction) => {
+    const transactionDate = entryDate(transaction);
+
     // Reimbursement rows are activity-log shadows. The parent split
     // transaction's reimbursement history is the canonical source.
     if (isReimbursement(transaction)) return;
+
+    if (openingDate && transactionDate < openingDate) {
+      const receivedAfterOpening = (transaction.reimbursements || [])
+        .filter((entry) => entryDate(entry) >= openingDate)
+        .reduce((total, entry) => total + amountOf(entry), 0);
+      if (receivedAfterOpening > 0) {
+        const bankName = resolveBankName(transaction?.bank, banks);
+        if (!balances[bankName]) {
+          balances[bankName] = { name: bankName, credited: 0, spent: 0, openingBalance: 0, balance: 0 };
+        }
+        balances[bankName].credited += receivedAfterOpening;
+        balances[bankName].balance += receivedAfterOpening;
+      }
+      return;
+    }
 
     const bankName = resolveBankName(transaction?.bank, banks);
     if (!balances[bankName]) {
@@ -119,7 +144,14 @@ export const calculateBankBalances = (
     // Reimbursements received for a split expense are credited once from the
     // original transaction, even though the API also stores shadow rows.
     if (isOutgoing(transaction)) {
-      const reimbursedAmount = Number(transaction?.reimbursedAmount);
+      const reimbursementHistory = Array.isArray(transaction.reimbursements)
+        ? transaction.reimbursements
+        : [];
+      const reimbursedAmount = openingDate && reimbursementHistory.length > 0
+        ? reimbursementHistory
+          .filter((entry) => entryDate(entry) >= openingDate)
+          .reduce((total, entry) => total + amountOf(entry), 0)
+        : Number(transaction?.reimbursedAmount);
       if (Number.isFinite(reimbursedAmount) && reimbursedAmount > 0) {
         balance.credited += reimbursedAmount;
         balance.balance += reimbursedAmount;

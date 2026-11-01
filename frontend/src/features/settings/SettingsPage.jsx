@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { settingsApi } from '../../services/api';
 import { Trash2, Plus, Check, Crown, X, Download } from 'lucide-react';
+import { getLocalDateString } from '../../utils/dateUtils';
 
 const ALL_SERVICES = ['UPI', 'Debit Card', 'Credit Card', 'Bank Transfer', 'Cash'];
 
@@ -12,7 +13,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
   const [isPaymentModeFormOpen, setIsPaymentModeFormOpen] = useState(false);
   const [isBankFormOpen, setIsBankFormOpen] = useState(false);
   const [isMonthStartOpen, setIsMonthStartOpen] = useState(false);
-  const [monthToStart, setMonthToStart] = useState(new Date().toISOString().slice(0, 7));
+  const [openingDate, setOpeningDate] = useState(getLocalDateString());
   const [initialBalances, setInitialBalances] = useState({});
   const [startingMonth, setStartingMonth] = useState(false);
   const [formData, setFormData] = useState({
@@ -154,7 +155,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
         bank: bank.name,
         balance: Number(initialBalances[bank.name]) || 0
       }));
-      const response = await settingsApi.startMonth(monthToStart, bankBalances);
+      const response = await settingsApi.startMonth(openingDate, bankBalances);
       fetchSettings();
       setIsMonthStartOpen(false);
       alert(response.data.message || 'Previous month report sent and new month started.');
@@ -239,8 +240,8 @@ const Setup = ({ settings, fetchSettings, user }) => {
           <div className="card data-entry-modal-card" role="dialog" aria-modal="true" aria-labelledby="month-start-title">
             <div className="data-entry-header">
               <div>
-                <h3 id="month-start-title">Start New Month</h3>
-                <p>Your previous-month report will be emailed before the starting balance is saved. This balance is the baseline before your recorded transaction history; it is not additional income.</p>
+                <h3 id="month-start-title">Set Opening Balance</h3>
+                <p>Choose the exact date from which your tracking should begin. Transactions on or after this date are applied to this balance. The opening balance is not income.</p>
               </div>
               <button type="button" className="data-entry-close" onClick={() => setIsMonthStartOpen(false)} aria-label="Close start month form">
                 <X size={18} />
@@ -249,8 +250,8 @@ const Setup = ({ settings, fetchSettings, user }) => {
             <form className="data-entry-form" onSubmit={handleStartMonth}>
               <div className="form-row">
                 <div className="form-group flex-1">
-                  <label htmlFor="month-to-start">Month to start</label>
-                  <input id="month-to-start" type="month" value={monthToStart} onChange={(event) => setMonthToStart(event.target.value)} required />
+                  <label htmlFor="opening-date">Opening balance date</label>
+                  <input id="opening-date" type="date" value={openingDate} onChange={(event) => setOpeningDate(event.target.value)} required />
                 </div>
                 <div className="form-group flex-1">
                   <label>Initial balance by bank (₹)</label>
@@ -275,7 +276,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
               </div>
               <div>
                 <button type="submit" className="btn-primary" disabled={startingMonth} style={{ width: 'auto' }}>
-                  {startingMonth ? 'Sending report...' : 'Send Report & Start Month'}
+                  {startingMonth ? 'Saving opening balance...' : 'Save Opening Balance'}
                 </button>
                 <button type="button" className="btn-secondary" onClick={() => setIsMonthStartOpen(false)} style={{ width: 'auto', marginLeft: '0.75rem' }}>
                   Cancel

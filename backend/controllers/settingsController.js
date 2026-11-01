@@ -94,10 +94,13 @@ exports.sendMonthlyReport = async (req, res) => {
 
 exports.startMonth = async (req, res) => {
   try {
-    const { month, initialBalance, bankBalances } = req.body;
-    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month || '')) {
-      return res.status(400).json({ message: 'Provide a valid month in YYYY-MM format.' });
+    const requestedDate = String(req.body.date || '').trim();
+    const legacyMonth = String(req.body.month || '').trim();
+    const openingDate = requestedDate || (/^\d{4}-(0[1-9]|1[0-2])$/.test(legacyMonth) ? `${legacyMonth}-01` : '');
+    if (!/^\d{4}-(0[1-9]|1[0-2])-([0-2]\d|3[01])$/.test(openingDate)) {
+      return res.status(400).json({ message: 'Provide a valid opening date in YYYY-MM-DD format.' });
     }
+    const month = openingDate.slice(0, 7);
 
     const submittedBankBalances = Array.isArray(bankBalances) ? bankBalances : [];
     const normalizedBankBalances = submittedBankBalances.map((entry) => ({
@@ -111,29 +114,27 @@ exports.startMonth = async (req, res) => {
 
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
-    if (!process.env.RESEND_API_KEY) {
-      return res.status(400).json({ message: 'RESEND_API_KEY is not configured in the backend environment.' });
-    }
-
-    // Passing the first day of the selected month with automatic mode makes
-    // the report generator target the complete previous calendar month.
-    const reportReferenceDate = new Date(`${month}-01T12:00:00+05:30`);
-    await generateAndSendMonthlyReportForUser(user, true, reportReferenceDate);
+    // Saving an opening balance must not depend on email configuration. A
+    // report can be requested separately from the reports/settings actions.
 
     let settings = await Settings.findOne({ userId: req.user.id });
     if (!settings) settings = new Settings({ userId: req.user.id });
     const openingBalances = settings.monthlyOpeningBalances || [];
-    const existing = openingBalances.find((entry) => entry.month === month);
+    const existing = openingBalances.find((entry) =>
+      (entry.date || `${entry.month}-01`) === openingDate,
+    );
     if (existing) {
+      existing.date = openingDate;
+      existing.month = month;
       existing.balance = balance;
       existing.bankBalances = normalizedBankBalances;
     } else {
-      openingBalances.push({ month, balance, bankBalances: normalizedBankBalances });
+      openingBalances.push({ date: openingDate, month, balance, bankBalances: normalizedBankBalances });
     }
     settings.monthlyOpeningBalances = openingBalances;
     await settings.save();
 
-    res.json({ message: `Previous month's report sent and ${month} started successfully.`, month, initialBalance: balance, bankBalances: normalizedBankBalances });
+    res.json({ message: `Opening balance dated ${openingDate} saved successfully.`, date: openingDate, month, initialBalance: balance, bankBalances: normalizedBankBalances });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
