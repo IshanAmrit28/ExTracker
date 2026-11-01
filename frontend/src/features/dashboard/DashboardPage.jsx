@@ -22,20 +22,29 @@ const Dashboard = ({ transactions, settings }) => {
 
   // Bank Account & Wallet Balances calculation directly across transaction history
   const bankBalances = {};
+  const latestOpeningBalance = (settings?.monthlyOpeningBalances || [])
+    .filter(entry => entry.month <= currentMonth)
+    .sort((a, b) => b.month.localeCompare(a.month))[0];
+
   if (settings?.banks) {
     settings.banks.forEach(b => {
+      const opening = latestOpeningBalance?.bankBalances?.find(entry =>
+        String(entry.bank || '').trim().toLowerCase() === String(b.name || '').trim().toLowerCase(),
+      );
+
       bankBalances[b.name] = {
         name: b.name,
         credited: 0,
         spent: 0,
-        balance: 0
+        balance: Number(opening?.balance) || 0
       };
     });
   }
 
   transactions.forEach(t => {
-    // Reimbursements are paybacks for split expenses, not new income, so exclude to avoid counting extra
-    if (t.type === 'Reimbursement' || t.category === 'Reimbursement') return;
+    // Once a month opening balance is recorded, it already includes all
+    // transactions before that month. Only apply transactions from then on.
+    if (latestOpeningBalance && getMonthKey(t.date) < latestOpeningBalance.month) return;
 
     const rawBank = String(t.bank || '').trim();
     const matchedBank = settings?.banks?.find(b => {
@@ -56,13 +65,19 @@ const Dashboard = ({ transactions, settings }) => {
       bankBalances[targetBankName] = { name: targetBankName, credited: 0, spent: 0, balance: 0 };
     }
 
-    if (isIncome(t)) {
+    // Bank balance is based on actual cash movement:
+    // incoming - outgoing - reimbursement paid + reimbursement collected.
+    // Reimbursement records are shadow transactions for money collected, so
+    // they must be credited when they occur rather than ignored.
+    if (isIncome(t) || t.type === 'Reimbursement' || t.category === 'Reimbursement') {
       bankBalances[targetBankName].credited += t.amount;
       bankBalances[targetBankName].balance += t.amount;
     } else if (isExpense(t)) {
-      const share = getExpenseShare(t);
-      bankBalances[targetBankName].spent += share;
-      bankBalances[targetBankName].balance -= share;
+      // For a split expense, `amount` is the total paid from the bank.
+      // Any reimbursement received is represented by a separate positive
+      // Reimbursement transaction above.
+      bankBalances[targetBankName].spent += t.amount;
+      bankBalances[targetBankName].balance -= t.amount;
     } else if (t.type === 'Saving') {
       bankBalances[targetBankName].spent += t.amount;
       bankBalances[targetBankName].balance -= t.amount;
