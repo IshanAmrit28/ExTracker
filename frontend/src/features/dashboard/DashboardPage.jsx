@@ -22,30 +22,18 @@ const Dashboard = ({ transactions, settings }) => {
 
   // Bank Account & Wallet Balances calculation directly across transaction history
   const bankBalances = {};
-  const latestOpeningBalance = (settings?.monthlyOpeningBalances || [])
-    .filter(entry => entry.month <= currentMonth)
-    .sort((a, b) => b.month.localeCompare(a.month))[0];
-
   if (settings?.banks) {
     settings.banks.forEach(b => {
-      const opening = latestOpeningBalance?.bankBalances?.find(entry =>
-        String(entry.bank || '').trim().toLowerCase() === String(b.name || '').trim().toLowerCase(),
-      );
-
       bankBalances[b.name] = {
         name: b.name,
         credited: 0,
         spent: 0,
-        balance: Number(opening?.balance) || 0
+        balance: 0
       };
     });
   }
 
   transactions.forEach(t => {
-    // Once a month opening balance is recorded, it already includes all
-    // transactions before that month. Only apply transactions from then on.
-    if (latestOpeningBalance && getMonthKey(t.date) < latestOpeningBalance.month) return;
-
     const rawBank = String(t.bank || '').trim();
     const matchedBank = settings?.banks?.find(b => {
       const bLower = String(b.name || '').trim().toLowerCase();
