@@ -24,7 +24,11 @@ const Dashboard = ({ transactions, settings }) => {
     : 0;
 
   // Bank balances are cumulative over every persisted transaction.
-  const displayBankList = calculateBankBalances(transactions, settings?.banks || []);
+  const displayBankList = calculateBankBalances(
+    transactions,
+    settings?.banks || [],
+    settings?.monthlyOpeningBalances || [],
+  );
 
   // Total Overall Balance: exact sum across all bank accounts and wallets
   const totalOverallBalance = displayBankList.reduce((acc, b) => acc + b.balance, 0);
@@ -227,6 +231,14 @@ const Dashboard = ({ transactions, settings }) => {
                   </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                  {b.openingBalance !== 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>Opening Balance:</span>
+                      <span style={{ color: '#8b5cf6', fontWeight: 'bold' }}>
+                        ₹{b.openingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                     <span style={{ color: 'var(--text-muted)' }}>Credited (Inflow):</span>
                     <span style={{ color: '#22c55e', fontWeight: 'bold' }}>

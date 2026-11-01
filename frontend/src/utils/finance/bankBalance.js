@@ -46,7 +46,23 @@ const resolveBankName = (transactionBank, banks) => {
  * is created for the activity log. The activity row is not counted here, or
  * the same money would be credited twice.
  */
-export const calculateBankBalances = (transactions = [], banks = []) => {
+export const calculateBankBalances = (
+  transactions = [],
+  banks = [],
+  openingBalances = [],
+) => {
+  const transactionMonths = transactions
+    .map((transaction) => String(transaction?.date || '').slice(0, 7))
+    .filter(Boolean)
+    .sort();
+  const firstTransactionMonth = transactionMonths[0];
+  const sortedOpenings = [...openingBalances]
+    .filter((entry) => entry?.month)
+    .sort((a, b) => String(a.month).localeCompare(String(b.month)));
+  const openingEntry = sortedOpenings
+    .filter((entry) => !firstTransactionMonth || entry.month <= firstTransactionMonth)
+    .at(-1) || (transactions.length === 0 ? sortedOpenings.at(-1) : null);
+
   const balances = {};
 
   banks.forEach((bank) => {
@@ -55,8 +71,26 @@ export const calculateBankBalances = (transactions = [], banks = []) => {
       name: bank.name,
       credited: 0,
       spent: 0,
+      openingBalance: 0,
       balance: 0,
     };
+  });
+
+  (openingEntry?.bankBalances || []).forEach((opening) => {
+    const bankName = resolveBankName(opening.bank, banks);
+    if (!balances[bankName]) {
+      balances[bankName] = {
+        name: bankName,
+        credited: 0,
+        spent: 0,
+        openingBalance: 0,
+        balance: 0,
+      };
+    }
+
+    const amount = amountOf({ amount: opening.balance });
+    balances[bankName].openingBalance += amount;
+    balances[bankName].balance += amount;
   });
 
   transactions.forEach((transaction) => {
@@ -70,6 +104,7 @@ export const calculateBankBalances = (transactions = [], banks = []) => {
         name: bankName,
         credited: 0,
         spent: 0,
+        openingBalance: 0,
         balance: 0,
       };
     }
@@ -97,8 +132,8 @@ export const calculateBankBalances = (transactions = [], banks = []) => {
   return Object.values(balances);
 };
 
-export const calculateOverallBalance = (transactions = [], banks = []) =>
-  calculateBankBalances(transactions, banks).reduce(
+export const calculateOverallBalance = (transactions = [], banks = [], openingBalances = []) =>
+  calculateBankBalances(transactions, banks, openingBalances).reduce(
     (total, bank) => total + bank.balance,
     0,
   );
