@@ -1,6 +1,7 @@
 import { Activity, Target, Wallet, TrendingDown, Landmark, PieChart, Receipt } from 'lucide-react';
 import { getCurrentMonthKey, getMonthKey } from '../../utils/finance/dates';
 import { getExpenseShare, isExpense, isIncome, isPersonalExpense } from '../../utils/finance/transactions';
+import { calculateBankBalances } from '../../utils/finance/bankBalance';
 
 const Dashboard = ({ transactions, settings }) => {
   const currentMonth = getCurrentMonthKey();
@@ -22,66 +23,8 @@ const Dashboard = ({ transactions, settings }) => {
     ? Math.round((budgetLeftThisMonth / monthlyBudget) * 100)
     : 0;
 
-  // Bank Account & Wallet Balances calculation directly across transaction history
-  const bankBalances = {};
-  if (settings?.banks) {
-    settings.banks.forEach(b => {
-      bankBalances[b.name] = {
-        name: b.name,
-        credited: 0,
-        spent: 0,
-        balance: 0
-      };
-    });
-  }
-
-  transactions.forEach(t => {
-    const rawBank = String(t.bank || '').trim();
-    const matchedBank = settings?.banks?.find(b => {
-      const bLower = String(b.name || '').trim().toLowerCase();
-      const tLower = rawBank.toLowerCase();
-      if (bLower === tLower) return true;
-      if (
-        (bLower === 'cash' || bLower === 'cash / wallet' || bLower === 'wallet') &&
-        (tLower === 'cash' || tLower === 'cash / wallet' || tLower === 'wallet')
-      ) {
-        return true;
-      }
-      return false;
-    });
-
-    const targetBankName = matchedBank ? matchedBank.name : (rawBank || 'Cash / Wallet');
-    if (!(targetBankName in bankBalances)) {
-      bankBalances[targetBankName] = { name: targetBankName, credited: 0, spent: 0, balance: 0 };
-    }
-
-    // Bank balance is based on actual cash movement:
-    // incoming - outgoing - reimbursement paid + reimbursement collected.
-    // Reimbursement records are shadow transactions for money collected, so
-    // they must be credited when they occur rather than ignored.
-    if (isIncome(t) || t.type === 'Reimbursement' || t.category === 'Reimbursement') {
-      bankBalances[targetBankName].credited += t.amount;
-      bankBalances[targetBankName].balance += t.amount;
-    } else if (isExpense(t)) {
-      // For a split expense, `amount` is the total paid from the bank.
-      // Any reimbursement received is represented by a separate positive
-      // Reimbursement transaction above.
-      bankBalances[targetBankName].spent += t.amount;
-      bankBalances[targetBankName].balance -= t.amount;
-    } else if (t.type === 'Saving') {
-      bankBalances[targetBankName].spent += t.amount;
-      bankBalances[targetBankName].balance -= t.amount;
-    }
-  });
-
-  const activeBankNames = settings?.banks?.length > 0 
-    ? settings.banks.map(b => b.name) 
-    : [];
-  const bankList = Object.values(bankBalances).filter(b => activeBankNames.includes(b.name));
-  const unconfiguredActiveBanks = Object.values(bankBalances).filter(
-    b => !activeBankNames.includes(b.name) && (b.credited !== 0 || b.spent !== 0 || b.balance !== 0)
-  );
-  const displayBankList = [...bankList, ...unconfiguredActiveBanks];
+  // Bank balances are cumulative over every persisted transaction.
+  const displayBankList = calculateBankBalances(transactions, settings?.banks || []);
 
   // Total Overall Balance: exact sum across all bank accounts and wallets
   const totalOverallBalance = displayBankList.reduce((acc, b) => acc + b.balance, 0);

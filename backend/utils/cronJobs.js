@@ -62,9 +62,9 @@ const generateAndSendReportForUser = async (user, isAutomatic = false, reference
     
     allTransactions.forEach(t => {
       if (t.date < startStr) {
-        if (t.type === 'Income') {
+        if (t.type === 'Income' || t.type === 'Reimbursement' || t.category === 'Reimbursement') {
           preIncome += t.amount;
-        } else if (['Need', 'Want', 'expense'].includes(t.type)) {
+        } else if (['Need', 'Want', 'Saving', 'expense'].includes(t.type)) {
           preExpense += t.amount;
         }
       }
@@ -82,7 +82,7 @@ const generateAndSendReportForUser = async (user, isAutomatic = false, reference
     allTransactions.forEach(t => {
       if (t.date >= startStr && t.date <= endStr) {
         weeklyList.push(t);
-        if (t.type === 'Income') {
+        if (t.type === 'Income' || t.type === 'Reimbursement' || t.category === 'Reimbursement') {
           weeklyIncome += t.amount;
         } else if (t.type === 'Need') {
           weeklyNeed += t.amount;
@@ -117,15 +117,15 @@ const generateAndSendReportForUser = async (user, isAutomatic = false, reference
         
         if (isCurrentBank) {
           if (t.date < startStr) {
-            if (t.type === 'Income') {
+            if (t.type === 'Income' || t.type === 'Reimbursement' || t.category === 'Reimbursement') {
               bankPreIncome += t.amount;
-            } else if (['Need', 'Want', 'expense'].includes(t.type)) {
+            } else if (['Need', 'Want', 'Saving', 'expense'].includes(t.type)) {
               bankPreExpense += t.amount;
             }
           } else if (t.date >= startStr && t.date <= endStr) {
-            if (t.type === 'Income') {
+            if (t.type === 'Income' || t.type === 'Reimbursement' || t.category === 'Reimbursement') {
               bankWeeklyIncome += t.amount;
-            } else if (['Need', 'Want', 'expense'].includes(t.type)) {
+            } else if (['Need', 'Want', 'Saving', 'expense'].includes(t.type)) {
               bankWeeklySpent += t.amount;
             }
           }
@@ -207,9 +207,9 @@ const generateAndSendMonthlyReportForUser = async (user, isAutomatic = false, re
     
     allTransactions.forEach(t => {
       if (t.date < startStr) {
-        if (t.type === 'Income') {
+        if (t.type === 'Income' || t.type === 'Reimbursement' || t.category === 'Reimbursement') {
           preIncome += t.amount;
-        } else if (['Need', 'Want', 'expense'].includes(t.type)) {
+        } else if (['Need', 'Want', 'Saving', 'expense'].includes(t.type)) {
           preExpense += t.amount;
         }
       }
@@ -231,7 +231,7 @@ const generateAndSendMonthlyReportForUser = async (user, isAutomatic = false, re
     allTransactions.forEach(t => {
       if (t.date >= startStr && t.date <= endStr) {
         weeklyList.push(t);
-        if (t.type === 'Income') {
+        if (t.type === 'Income' || t.type === 'Reimbursement' || t.category === 'Reimbursement') {
           weeklyIncome += t.amount;
         } else if (t.type === 'Need') {
           weeklyNeed += t.amount;
@@ -264,15 +264,15 @@ const generateAndSendMonthlyReportForUser = async (user, isAutomatic = false, re
         
         if (isCurrentBank) {
           if (t.date < startStr) {
-            if (t.type === 'Income') {
+            if (t.type === 'Income' || t.type === 'Reimbursement' || t.category === 'Reimbursement') {
               bankPreIncome += t.amount;
-            } else if (['Need', 'Want', 'expense'].includes(t.type)) {
+            } else if (['Need', 'Want', 'Saving', 'expense'].includes(t.type)) {
               bankPreExpense += t.amount;
             }
           } else if (t.date >= startStr && t.date <= endStr) {
-            if (t.type === 'Income') {
+            if (t.type === 'Income' || t.type === 'Reimbursement' || t.category === 'Reimbursement') {
               bankWeeklyIncome += t.amount;
-            } else if (['Need', 'Want', 'expense'].includes(t.type)) {
+            } else if (['Need', 'Want', 'Saving', 'expense'].includes(t.type)) {
               bankWeeklySpent += t.amount;
             }
           }

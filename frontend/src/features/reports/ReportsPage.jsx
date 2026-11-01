@@ -46,8 +46,12 @@ const ReportsAndDiagnostics = ({ transactions, settings, user }) => {
       if (!txByPeriod.weekly[weekKey]) txByPeriod.weekly[weekKey] = [];
       if (!txByPeriod.monthly[monthKey]) txByPeriod.monthly[monthKey] = [];
 
-      if (t.type === 'Reimbursement') {
-        // Reimbursements are tracked separately and not counted as income or expense
+      if (t.type === 'Reimbursement' || t.category === 'Reimbursement') {
+        const amount = Number(t.amount) || 0;
+        weekly[weekKey].income += amount;
+        monthly[monthKey].income += amount;
+        weekly[weekKey].balance += amount;
+        monthly[monthKey].balance += amount;
       } else if (t.type.toLowerCase() === 'income') {
         const amount = Number(t.amount);
         weekly[weekKey].income += amount;
@@ -55,7 +59,7 @@ const ReportsAndDiagnostics = ({ transactions, settings, user }) => {
         weekly[weekKey].balance += amount;
         monthly[monthKey].balance += amount;
       } else {
-        const amount = t.isSplit && t.myShare != null ? Number(t.myShare) : Number(t.amount);
+        const amount = Number(t.amount) || 0;
         weekly[weekKey].expense += amount;
         monthly[monthKey].expense += amount;
         weekly[weekKey].balance -= amount;
@@ -104,14 +108,14 @@ const ReportsAndDiagnostics = ({ transactions, settings, user }) => {
       const bank = t.bank || '';
       if (!groupedTxs[bank]) groupedTxs[bank] = { txs: [], income: 0, expense: 0, balance: 0 };
       groupedTxs[bank].txs.push(t);
-      if (t.type === 'Reimbursement') {
-        groupedTxs[bank].income += t.amount;
-        groupedTxs[bank].balance += t.amount;
+      if (t.type === 'Reimbursement' || t.category === 'Reimbursement') {
+        groupedTxs[bank].income += Number(t.amount) || 0;
+        groupedTxs[bank].balance += Number(t.amount) || 0;
       } else if (t.type.toLowerCase() === 'income') {
         groupedTxs[bank].income += t.amount;
         groupedTxs[bank].balance += t.amount;
       } else {
-        const expAmt = t.isSplit && t.myShare != null ? t.myShare : t.amount;
+        const expAmt = Number(t.amount) || 0;
         groupedTxs[bank].expense += expAmt;
         groupedTxs[bank].balance -= expAmt;
       }
