@@ -15,7 +15,7 @@ const Dashboard = ({ transactions, settings }) => {
     .filter(t => isIncome(t) || t.type === 'Reimbursement' || t.category === 'Reimbursement')
     .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
   const totalSpentThisMonth = actualNeed + actualWant;
-  const monthlyBudget = Number(settings.monthlyLimit) || 0;
+  const monthlyBudget = Number(settings?.monthlyLimit) || 0;
   const budgetLeftThisMonth = monthlyBudget > 0
     ? monthlyBudget - totalSpentThisMonth
     : 0;
@@ -52,14 +52,14 @@ const Dashboard = ({ transactions, settings }) => {
   // Score Calculation
   let score = 50;
   if (salary > 0) {
-    const needAdherence = Math.max(0, 1 - (actualNeed / budgetNeed));
-    const wantAdherence = Math.max(0, 1 - (actualWant / budgetWant));
+    const needAdherence = budgetNeed > 0 ? Math.max(0, 1 - (actualNeed / budgetNeed)) : 0;
+    const wantAdherence = budgetWant > 0 ? Math.max(0, 1 - (actualWant / budgetWant)) : 0;
     score += (needAdherence * 15) + (wantAdherence * 15);
     
     if (actualSaving >= budgetSaving) {
       score += 20;
     } else {
-      score += (actualSaving / budgetSaving) * 20;
+      score += budgetSaving > 0 ? (actualSaving / budgetSaving) * 20 : 0;
     }
   }
   score = Math.min(100, Math.round(score));

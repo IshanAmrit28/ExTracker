@@ -217,6 +217,7 @@ exports.recordReimbursement = async (req, res) => {
 
     // Push entry into parent split transaction's history
     transaction.reimbursements.push({
+      sourceTransactionId: transaction._id,
       personName: personName || '',
       amount: reimburseVal,
       date: reimburseDate,
@@ -249,6 +250,7 @@ exports.recordReimbursement = async (req, res) => {
       bank: bank || transaction.bank || 'Cash / Wallet',
       amount: reimburseVal,
       notes: notes || `Reimbursed for split expense: ${transaction.description}`,
+      sourceTransactionId: transaction._id,
       isSplit: false
     });
     await shadowTx.save();
@@ -325,6 +327,7 @@ exports.recordReimbursements = async (req, res) => {
       member.reimbursedAmount = roundCurrency((member.reimbursedAmount || 0) + entry.amount);
       member.isFullyReimbursed = member.reimbursedAmount >= member.amount - 0.01;
       transaction.reimbursements.push({
+        sourceTransactionId: transaction._id,
         personName: entry.personName,
         amount: entry.amount,
         date: entry.date,
@@ -348,6 +351,7 @@ exports.recordReimbursements = async (req, res) => {
         bank: entry.bank || transaction.bank || 'Cash / Wallet',
         amount: entry.amount,
         notes: entry.notes || `Reimbursed for split expense: ${transaction.description}`,
+        sourceTransactionId: transaction._id,
         isSplit: false,
       }).save(),
     ));
@@ -368,6 +372,10 @@ exports.deleteTransaction = async (req, res) => {
       return res.status(401).json({ message: 'User not authorized' });
     }
 
+    await Transaction.deleteMany({
+      userId: req.user.id,
+      sourceTransactionId: transaction._id,
+    });
     await transaction.deleteOne();
     res.json({ message: 'Transaction deleted' });
   } catch (err) {
@@ -385,8 +393,12 @@ exports.getSummary = async (req, res) => {
       return t.date && t.date.startsWith(yearMonth);
     });
 
-    const income = transactions.filter(t => t.type === 'income' || t.type === 'Income').reduce((acc, curr) => acc + curr.amount, 0);
-    const expense = transactions.filter(t => t.type === 'expense' || t.type === 'Need' || t.type === 'Want').reduce((acc, curr) => acc + (curr.isSplit && curr.myShare != null ? curr.myShare : curr.amount), 0);
+    const income = transactions
+      .filter(t => ['income', 'Income', 'Reimbursement'].includes(t.type) || t.category === 'Reimbursement')
+      .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+    const expense = transactions
+      .filter(t => ['expense', 'Need', 'Want', 'Saving'].includes(t.type))
+      .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
 
     res.json({
       income,

@@ -86,6 +86,7 @@ const transactionSchema = new mongoose.Schema({
     isFullyReimbursed: { type: Boolean, default: false }
   }],
   reimbursements: [{
+    sourceTransactionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
     personName: String,
     amount: Number,
     date: String,
@@ -100,6 +101,11 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     enum: ['Pending', 'Partial', 'Completed'],
     default: 'Pending'
+  },
+  sourceTransactionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Transaction',
+    default: null
   }
 }, { 
   timestamps: true,

@@ -60,7 +60,7 @@ const IncomeTracker = ({ transactions, settings, fetchTransactions }) => {
     <div className="fade-in">
       <header className="page-header">
         <h2>Income Tracker</h2>
-        <p>Log all your credited amounts. Reimbursements from split expenses appear here but are <strong>not counted as income</strong>.</p>
+        <p>Log all your credited amounts. Reimbursements from split expenses are shown separately as recovered cash.</p>
       </header>
 
       {!isFormOpen && !editingTransaction && (

@@ -105,7 +105,7 @@ const TransactionRow = ({
               </button>
             )}
             <span>{transaction.description}</span>
-            {isSplitTransaction && (
+            {isSplitTransaction && outstanding > 0 && (
               <span
                 style={{
                   fontSize: "0.7rem",

@@ -207,10 +207,12 @@ const SplitExpensePanel = ({
       )}
 
       {calculatedRecoverable > 0 && (
-        <label style={{ display: "flex", alignItems: "center", gap: "0.55rem", fontSize: "0.82rem", cursor: "pointer" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "0.55rem", fontSize: "0.82rem", cursor: "pointer", padding: "0.7rem", borderRadius: "8px", background: alreadyPaidBack ? "rgba(34, 197, 94, 0.1)" : "rgba(249, 115, 22, 0.08)" }}>
           <input type="checkbox" checked={alreadyPaidBack} onChange={(event) => setAlreadyPaidBack(event.target.checked)} />
           <CheckCircle size={15} color={alreadyPaidBack ? "#22c55e" : "var(--text-muted)"} />
-          Everyone has already paid me back
+          {alreadyPaidBack
+            ? "Already collected — record reimbursement now"
+            : "Still owed — record reimbursement when received"}
         </label>
       )}
     </section>

@@ -32,14 +32,18 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
   const filteredTransactions = useMemo(() => {
     return transactions
       .filter((tx) => {
-        if (tx.type === "Reimbursement") return false;
         if (
           transactionView === "outgoing" &&
           !["Need", "Want", "Saving", "expense"].includes(tx.type)
         ) {
           return false;
         }
-        if (transactionView === "incoming" && tx.type !== "Income") {
+        if (
+          transactionView === "incoming" &&
+          tx.type !== "Income" &&
+          tx.type !== "Reimbursement" &&
+          tx.category !== "Reimbursement"
+        ) {
           return false;
         }
         const matchMonth = getMonthKey(tx.date) === selectedMonth;
@@ -78,8 +82,13 @@ const DailyTracker = ({ transactions, settings, fetchTransactions }) => {
   const totalInflow = useMemo(
     () =>
       filteredTransactions
-        .filter((tx) => tx.type === "Income")
-        .reduce((sum, tx) => sum + tx.amount, 0),
+        .filter(
+          (tx) =>
+            tx.type === "Income" ||
+            tx.type === "Reimbursement" ||
+            tx.category === "Reimbursement",
+        )
+        .reduce((sum, tx) => sum + Number(tx.amount || 0), 0),
     [filteredTransactions],
   );
 
