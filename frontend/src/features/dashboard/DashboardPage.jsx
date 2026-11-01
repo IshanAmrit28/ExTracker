@@ -10,7 +10,9 @@ const Dashboard = ({ transactions, settings }) => {
   const actualWant = thisMonthTx.filter(t => isPersonalExpense(t) && t.type === 'Want').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
   const actualSaving = thisMonthTx.filter(t => isPersonalExpense(t) && t.type === 'Saving').reduce((acc, curr) => acc + getExpenseShare(curr), 0);
 
-  const totalCreditedThisMonth = thisMonthTx.filter(isIncome).reduce((acc, curr) => acc + curr.amount, 0);
+  const totalCreditedThisMonth = thisMonthTx
+    .filter(t => isIncome(t) || t.type === 'Reimbursement' || t.category === 'Reimbursement')
+    .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
   const totalSpentThisMonth = actualNeed + actualWant;
   const monthlyBudget = Number(settings.monthlyLimit) || 0;
   const budgetLeftThisMonth = monthlyBudget > 0
