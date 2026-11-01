@@ -40,6 +40,11 @@ const resolveBankName = (transactionBank, banks) => {
  * This intentionally uses transaction.amount for outgoing transactions:
  * amount is what left the bank. Split `myShare` is only a budget metric and
  * must not be used to calculate the bank's actual balance.
+ *
+ * Reimbursements are stored twice by the API: the original split transaction
+ * stores the canonical `reimbursedAmount`, and a separate Reimbursement row
+ * is created for the activity log. The activity row is not counted here, or
+ * the same money would be credited twice.
  */
 export const calculateBankBalances = (transactions = [], banks = []) => {
   const balances = {};
@@ -55,6 +60,10 @@ export const calculateBankBalances = (transactions = [], banks = []) => {
   });
 
   transactions.forEach((transaction) => {
+    // Reimbursement rows are activity-log shadows. The linked original
+    // split transaction below is the source of truth for the total received.
+    if (isReimbursement(transaction)) return;
+
     const bankName = resolveBankName(transaction?.bank, banks);
     if (!balances[bankName]) {
       balances[bankName] = {
@@ -68,12 +77,20 @@ export const calculateBankBalances = (transactions = [], banks = []) => {
     const amount = amountOf(transaction);
     const balance = balances[bankName];
 
-    if (isIncome(transaction) || isReimbursement(transaction)) {
+    if (isIncome(transaction)) {
       balance.credited += amount;
       balance.balance += amount;
     } else if (isOutgoing(transaction)) {
       balance.spent += amount;
       balance.balance -= amount;
+    }
+
+    // Reimbursements received for a split expense are credited once from the
+    // original transaction, even though the API also stores shadow rows.
+    const reimbursedAmount = Number(transaction?.reimbursedAmount);
+    if (isOutgoing(transaction) && Number.isFinite(reimbursedAmount) && reimbursedAmount > 0) {
+      balance.credited += reimbursedAmount;
+      balance.balance += reimbursedAmount;
     }
   });
 
