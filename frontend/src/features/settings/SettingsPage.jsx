@@ -240,7 +240,7 @@ const Setup = ({ settings, fetchSettings, user }) => {
             <div className="data-entry-header">
               <div>
                 <h3 id="month-start-title">Start New Month</h3>
-                <p>Your complete previous-month report will be emailed as a PDF before the new balance is saved.</p>
+                <p>Your previous-month report will be emailed before the starting balance is saved. This balance is the baseline before your recorded transaction history; it is not additional income.</p>
               </div>
               <button type="button" className="data-entry-close" onClick={() => setIsMonthStartOpen(false)} aria-label="Close start month form">
                 <X size={18} />
